@@ -29,13 +29,27 @@ __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 #define log_info(M, ...) fprintf(stderr, "[INFO] (%s:%d) " M "\n",\
 __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define check(A, M, ...) if(!(A)) {\
-log_err(M, ##__VA_ARGS__); errno=0; goto error; }
+#define try(A, M, ...) if(!(A)) {\
+log_err(M, ##__VA_ARGS__); errno=0; goto catch; }
+
+#define check_return(A, M, ...) if(!(A)) {\
+log_err(M, ##__VA_ARGS__); errno=0; return; }
+
+#define check_return_null(A, M, ...) if(!(A)) {\
+log_err(M, ##__VA_ARGS__); errno=0; return NULL; }
+
+#define check_break(A, M, ...) if(!(A)) {\
+log_err(M, ##__VA_ARGS__); errno=0; break; }
+
 
 #define sentinel(M, ...)  { log_err(M, ##__VA_ARGS__);\
 errno=0; goto error; }
 
 #define check_mem(A) check((A), "Out of memory.")
+
+#define check_mem_return(A) check_return((A), "Out of memory.")
+
+#define check_mem_return_null(A) check_return_null((A), "Out of memory.")
 
 #define check_debug(A, M, ...) if(!(A)) { debug(M, ##__VA_ARGS__);\
 errno=0; goto error; }
