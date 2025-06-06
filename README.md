@@ -1,0 +1,1 @@
+this contains bits and pieces from https://github.com/zedshaw/liblcthw so most of this code is contributed to Zed Shaw. The changes here is that I chose to use CMake and Unity instead of Make and authors own minunit.h
