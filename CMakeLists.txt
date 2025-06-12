@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
+
+set(CMAKE_C_COMPILER clang)
+
 project(libfaafo C)
 
 set(CMAKE_C_STANDARD 11)
@@ -21,6 +24,7 @@ add_library(libfaafo STATIC
         src/list.c
         include/dbg.h
         include/ptr_deref.h
+        include/defer.h
 )
 
 # Set up include directories
