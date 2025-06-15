@@ -11,22 +11,22 @@
 #define DArray_is_empty(A) ((A)->end == 0)
 #define DArray_first(A) ((A)->contents[0])
 #define DArray_last(A) ((A)->contents[(A)->end - 1])
-#define DArray_count(A) ((A)->end)
+#define DArray_end(A) ((A)->end)
 #define DArray_max(A) ((A)->max)
 #define DArray_free(A) free((A))
 
-#define DEFAULT_EXPAND_RATE 300
+#define DARRAY_DEFAULT_EXPAND_RATE 300
 
 typedef struct DArray {
 	int end;
-	int max;
+	size_t max;
 	size_t element_size;
 	size_t expand_rate;
 	void **contents;
 } DArray;
 
 DArray *DArray_create(size_t element_size, size_t initial_max);
-void DArray_destroy(DArray *array);
+void DArray_destroy(const DArray *array);
 void DArray_clear(DArray *array);
 void DArray_clear_destroy(DArray *array);
 int DArray_push(DArray *array, void *value);
