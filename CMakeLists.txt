@@ -19,12 +19,13 @@ FetchContent_MakeAvailable(unity)
 
 # Create the library
 add_library(libfaafo STATIC
-    src/library.c
         include/list.h
         src/list.c
         include/dbg.h
         include/ptr_deref.h
         include/defer.h
+        src/darray.c
+        include/darray.h
 )
 
 # Set up include directories

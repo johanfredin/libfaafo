@@ -50,9 +50,9 @@ void test_remove() {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(List_last(list), test3, "Wrong last element");
 }
 
-void main(void) {
+int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_push_pop);
     RUN_TEST(test_remove);
-    UNITY_END();
+    return UNITY_END();
 }

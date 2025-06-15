@@ -1,9 +1,5 @@
-//
-// Created by johan on 2025-06-05.
-//
-
-#ifndef DBG_H
-#define DBG_H
+#ifndef __dbg_h__
+#define __dbg_h__
 
 #include <stdio.h>
 #include <errno.h>
@@ -12,7 +8,7 @@
 #ifdef NDEBUG
 #define debug(M, ...)
 #else
-#define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n",\
+#define debug(M, ...) fprintf(stdout, "DEBUG %s:%d: " M "\n",\
 __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 
@@ -26,34 +22,36 @@ clean_errno(), ##__VA_ARGS__)
 "[WARN] (%s:%d: errno: %s) " M "\n",\
 __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
-#define log_info(M, ...) fprintf(stderr, "[INFO] (%s:%d) " M "\n",\
+#define log_info(M, ...) fprintf(stdout, "[INFO] (%s:%d) " M "\n",\
 __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define try(A, M, ...) if(!(A)) {\
-log_err(M, ##__VA_ARGS__); errno=0; goto catch; }
+// Basic check with custom action
+#define check(A, M, ACTION, ...) do { \
+    if(!(A)) { \
+        log_err(M, ##__VA_ARGS__); \
+        errno=0; \
+        ACTION; \
+    } \
+} while(0)
 
-#define check_return(A, M, ...) if(!(A)) {\
-log_err(M, ##__VA_ARGS__); errno=0; return; }
+// Return-based error handling
+#define check_return(A, M, RETVAL, ...) do { \
+    if(!(A)) { \
+        log_err(M, ##__VA_ARGS__); \
+        errno=0; \
+        return RETVAL; \
+    } \
+} while(0)
 
-#define check_return_null(A, M, ...) if(!(A)) {\
-log_err(M, ##__VA_ARGS__); errno=0; return NULL; }
+// Memory check with return value
+#define check_mem_return(A, RETVAL) \
+    check_return((A), "Out of memory.", RETVAL)
 
-#define check_break(A, M, ...) if(!(A)) {\
-log_err(M, ##__VA_ARGS__); errno=0; break; }
+#define check_mem(A, ACTION) \
+    check((A), "Out of memory.", ACTION)
 
-
-#define sentinel(M, ...)  { log_err(M, ##__VA_ARGS__);\
-errno=0; goto error; }
-
-#define check_mem(A) check((A), "Out of memory.")
-
-#define check_mem_return(A) check_return((A), "Out of memory.")
-
-#define check_mem_return_null(A) check_return_null((A), "Out of memory.")
-
+// Debug-only checks
 #define check_debug(A, M, ...) if(!(A)) { debug(M, ##__VA_ARGS__);\
-errno=0; goto error; }
+errno=0; return; }
 
-
-
-#endif //DBG_H
+#endif

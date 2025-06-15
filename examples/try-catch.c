@@ -25,14 +25,14 @@ void mess_up(const char *n) {
     if (!is_number(n, 255)) {
         Throw(NumberFormatException);
     }
-    const int num = (int) n;
+    const int num = (int) *n;
     if (num <= 0) {
         Throw(RuntimeException);
     }
     printf("All good jefe %d\n", num);
 }
 
-void main(void) {
+int main(void) {
     Try {
         mess_up("hehe");
     } Catch(RuntimeException) {
@@ -40,5 +40,5 @@ void main(void) {
     } Catch(NumberFormatException) {
         puts("You messed up with the number");
     }
-    
+    return 0;
 }
