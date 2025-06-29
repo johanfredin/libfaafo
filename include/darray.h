@@ -18,10 +18,10 @@
 #define DARRAY_DEFAULT_EXPAND_RATE 300
 
 typedef struct DArray {
-	int end;
-	size_t max;
 	size_t element_size;
 	size_t expand_rate;
+	unsigned int end;
+	unsigned int max;
 	void **contents;
 } DArray;
 
@@ -29,34 +29,19 @@ DArray *DArray_create(size_t element_size, size_t initial_max);
 void DArray_destroy(const DArray *array);
 void DArray_clear(DArray *array);
 void DArray_clear_destroy(DArray *array);
+int DArray_expand(DArray *array);
+int DArray_contract(DArray *array);
+int DArray_resize(DArray *array, size_t new_size);
 int DArray_push(DArray *array, void *value);
 void *DArray_pop(DArray *array);
 int DArray_contract(DArray *array);
+void DArray_set(DArray *array, unsigned int index, void *value);
+void *DArray_get(const DArray *array, unsigned int index);
+void *DArray_remove(const DArray *array, unsigned int index);
 
 
-static inline void DArray_set(DArray *array, const int index, void *value) {
-	check(index < array->max, "Index out of bounds", return);
-	array->contents[index] = value;
-	if (index > array->end) {
-		array->end = index;
-	}
-	array->contents[index] = value;
-}
-
-static inline void *DArray_get(const DArray *array, const int index) {
-	check_return(index < array->max, "Index out of bounds", NULL);
-	return array->contents[index];
-}
-
-static inline void *DArray_remove(const DArray *array, const int index) {
-	check_return(index < array->max, "Index out of bounds", NULL);
-	void *element = array->contents[index];
-	array->contents[index] = NULL;
-	return element;
-}
-
-static inline void *DArray_new(const DArray *array) {
-	check_return(array->element_size > 0, "Cant use DArray_new on 0 size darrays.", NULL);
+static void *DArray_new(const DArray *array) {
+	check_return(array->element_size > 0, "Cant use DArray_new on 0 size DArrays.", NULL);
 	return calloc(1, array->element_size);
 }
 

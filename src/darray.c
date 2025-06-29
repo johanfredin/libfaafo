@@ -4,9 +4,6 @@
 
 #include "darray.h"
 
-static int DArray_expand(DArray *array);
-static int DArray_resize(DArray *array, size_t new_size);
-
 DArray *DArray_create(const size_t element_size, const size_t initial_max) {
     check_return(initial_max > 0, "initial_max must be > 0", NULL);
     DArray *array = malloc(sizeof(DArray));
@@ -42,9 +39,20 @@ int DArray_push(DArray *array, void *value) {
     return 0;
 }
 
-static int DArray_expand(DArray *array) {
-    const size_t old_max = array->max;
-    const size_t attempted_resize = array->max + array->expand_rate;
+void *DArray_pop(DArray *array) {
+    check(array, "Can not pop from a NULL array", return NULL);
+    check(array->end > 0, "Array is empty", return NULL);
+    void *element = DArray_remove(array, array->end - 1);
+    array->end--;
+    if (array->end > array->element_size && array->end % array->expand_rate) {
+        DArray_contract(array);
+    }
+    return element;
+}
+
+int DArray_expand(DArray *array) {
+    const unsigned int old_max = array->max;
+    const unsigned int attempted_resize = array->max + array->expand_rate;
     check_return(DArray_resize(array, attempted_resize) == 0,
         "Failed to expand array to new size=%d", attempted_resize, -1);
 
@@ -52,11 +60,58 @@ static int DArray_expand(DArray *array) {
     return 0;
 }
 
-static int DArray_resize(DArray *array, const size_t new_size) {
+int DArray_contract(DArray *array) {
+    check_return(array, "Can not contract a NULL array", -1);
+    check_return(array->end > 0, "Array is already empty", -1);
+    int new_size;
+    if (array->end < array->expand_rate) {
+        new_size = DArray_resize(array, array->expand_rate + 1);
+    } else {
+        new_size = DArray_resize(array, array->end + 1);
+    }
+    check_return(new_size == 0, "Failed to contract array to new size=%d", new_size, -1);
+    return new_size;
+}
+
+int DArray_resize(DArray *array, const size_t new_size) {
     check_return(new_size > 0, "new_size must be > 0", -1);
     void *contents = realloc(array->contents, new_size * sizeof(void*));
     check_mem_return(contents, -1);
     array->contents = contents;
     array->max = new_size;
     return 0;
+}
+
+void DArray_set(DArray *array, const unsigned int index, void *value) {
+    check(index < array->max, "Index out of bounds", return);
+    array->contents[index] = value;
+    if (index > array->end) {
+        array->end = index;
+    }
+    array->contents[index] = value;
+}
+
+void *DArray_get(const DArray *array, const unsigned int index) {
+    check_return(index < array->max, "Index out of bounds", NULL);
+    return array->contents[index];
+}
+
+void *DArray_remove(const DArray *array, const unsigned int index) {
+    check_return(index < array->max, "Index out of bounds", NULL);
+    void *element = array->contents[index];
+    array->contents[index] = NULL;
+    return element;
+}
+
+void DArray_clear_destroy(DArray *array) {
+    DArray_clear(array);
+    DArray_destroy(array);
+}
+
+void DArray_clear(DArray *array) {
+    check(array, "Can not clear a NULL array", return);
+    for (unsigned int i = 0; i < array->end; i++) {
+        free(array->contents[i]);
+    }
+    array->end = 0;
 }
