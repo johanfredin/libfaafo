@@ -26,6 +26,8 @@ add_library(libfaafo STATIC
         include/defer.h
         src/darray.c
         include/darray.h
+        include/radixmap.h
+        src/radixmap.c
 )
 
 # Set up include directories

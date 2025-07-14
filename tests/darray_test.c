@@ -1,18 +1,22 @@
-//
-// Created by johan on 2025-06-15.
-//
-
 #include <darray.h>
+#include <ptr_deref.h>
+#include <string.h>
 #include <unity.h>
 
 static DArray *array;
 static int *val1;
 static int *val2;
 
-static int *dummy_val(const int val) {
+static int *dummy_ival(const int val) {
     int *iptr = malloc(sizeof(int));
     *iptr = val;
     return iptr;
+}
+
+static char *dummy_strval(const char *val) {
+    char *sptr = calloc(strlen(val) + 1, sizeof(char));
+    strcpy(sptr, val);
+    return sptr;
 }
 
 void setUp(void) {
@@ -54,8 +58,8 @@ void test_set_get_remove(void) {
     free(val1);
     free(val2);
 
-    int *new_val1 = dummy_val(666);
-    int *new_val2 = dummy_val(999);
+    int *new_val1 = dummy_ival(666);
+    int *new_val2 = dummy_ival(999);
     DArray_set(array, 0, new_val1);
     DArray_set(array, 1, new_val2);
 
@@ -82,8 +86,8 @@ void test_set_get_remove(void) {
 
 void test_push(void) {
     // Set up
-    val1 = dummy_val(1);
-    val2 = dummy_val(2);
+    val1 = dummy_ival(1);
+    val2 = dummy_ival(2);
 
     // Act
     DArray_add(array, val1);
@@ -100,17 +104,65 @@ void test_expand_contract(void) {
     
     // Fill array to trigger expansion
     for (int i = 0; i < old_capacity; i++) {
-        DArray_add(array, dummy_val(i));
+        DArray_add(array, dummy_ival(i));
     }
     
     // Push one more to trigger expansion
-    DArray_add(array, dummy_val(999));
+    DArray_add(array, dummy_ival(999));
     
     // Should have expanded by 50%
     unsigned int expected_capacity = old_capacity + (old_capacity >> 1);
     TEST_ASSERT_EQUAL_INT_MESSAGE(array->capacity, expected_capacity, 
                                   "DArray_expand not the expected size");
     
+}
+
+static int string_compare(const void **a, const void**b) {
+    return strcmp(*a, *b);
+}
+
+static int int_compare(const void **a, const void**b) {
+    return (int*) *a < (int*) *b;
+}
+
+void test_sort(void) {
+    // Set up
+    char *val1 = strdup("Bert");
+    char *val2 = strdup("Alfred");
+
+    DArray_add(array, val1);
+    DArray_add(array, val2);
+
+    TEST_ASSERT_EQUAL_STRING(deref_string(DArray_get(array, 0)), "Bert");
+    TEST_ASSERT_EQUAL_STRING(deref_string(DArray_get(array, 1)), "Alfred");
+
+
+    // Act
+    DArray_sort(array, (DArray_compare_func) string_compare);
+
+    // Verify
+    TEST_ASSERT_EQUAL_STRING(deref_string(DArray_get(array, 0)), "Alfred");
+    TEST_ASSERT_EQUAL_STRING(deref_string(DArray_get(array, 1)), "Bert");
+}
+
+void test_sort_int(void) {
+    // Set up
+    int *val1 = dummy_ival(2);
+    int *val2 = dummy_ival(1);
+
+    DArray_add(array, val1);
+    DArray_add(array, val2);
+
+    TEST_ASSERT_EQUAL_INT(deref_int(DArray_get(array, 0)), 2);
+    TEST_ASSERT_EQUAL_INT(deref_int(DArray_get(array, 1)), 1);
+
+
+    // Act
+    DArray_sort(array, (DArray_compare_func) int_compare);
+
+    // Verify
+    TEST_ASSERT_EQUAL_INT(deref_int(DArray_get(array, 0)), 1);
+    TEST_ASSERT_EQUAL_INT(deref_int(DArray_get(array, 1)), 2);
 }
 
 
@@ -121,5 +173,7 @@ int main(void) {
     RUN_TEST(test_destroy);
     RUN_TEST(test_expand_contract);
     RUN_TEST(test_push);
+    RUN_TEST(test_sort);
+    RUN_TEST(test_sort_int);
     return UNITY_END();
 }

@@ -5,6 +5,13 @@
 #include "darray.h"
 #include "dbg.h"
 
+int DArray_sort(DArray *array, const DArray_compare_func compare_func) {
+    check_mem(array, return -1);
+    check(array->contents, "Array is empty", return -1);
+    qsort(array->contents, DArray_size(array), sizeof(void *), compare_func);
+    return 0;
+}
+
 static int DArray_resize(DArray *array, size_t new_capacity);
 
 static int DArray_expand(DArray *array);

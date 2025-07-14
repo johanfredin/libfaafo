@@ -32,13 +32,13 @@ void mess_up(const char *n) {
     printf("All good jefe %d\n", num);
 }
 
-int main(void) {
-    Try {
-        mess_up("hehe");
-    } Catch(RuntimeException) {
-        puts("You messed up");
-    } Catch(NumberFormatException) {
-        puts("You messed up with the number");
-    }
-    return 0;
-}
+// int main(void) {
+//     Try {
+//         mess_up("hehe");
+//     } Catch(RuntimeException) {
+//         puts("You messed up");
+//     } Catch(NumberFormatException) {
+//         puts("You messed up with the number");
+//     }
+//     return 0;
+// }

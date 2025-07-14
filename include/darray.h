@@ -1,23 +1,25 @@
-//
-// Created by johan on 2025-06-15.
-//
+/**
+ * @file darray.h
+ * @brief Dynamic Array (DArray) - A resizable array implementation for void pointers
+ *
+ * DArray is a container for void pointers that automatically resizes as elements
+ * are added. By default, DArray does not take ownership of the memory pointed to by
+ * stored pointers – memory management of pointed-to objects is the caller's responsibility.
+ * However, if you use DArray_clear or DArray_clear_destroy, these will call free() on
+ * each non-NULL contained pointer. Only use these functions if all stored elements were
+ * dynamically allocated.
+ *
+ * Removal or clearing does not shift or compact elements; removed entries are set to NULL,
+ * and clearing frees all elements and sets size to zero.
+ *
+ * @note All stored elements are void* pointers. The element_size field is
+ *       informational only and not used for memory operations.
+ */
 
 #ifndef ARRAY_H
 #define ARRAY_H
 
 #include <stdlib.h>
-
-/**
- * @file darray.h
- * @brief Dynamic Array (DArray) - A resizable array implementation for void pointers
- * 
- * DArray is a container for void pointers that automatically resizes as elements
- * are added. It does NOT own the memory pointed to by the stored pointers - 
- * memory management of the contained objects is the caller's responsibility.
- * 
- * @note All stored elements are void* pointers. The element_size field is 
- *       informational only and not used for memory operations.
- */
 
 /** @brief Default minimum capacity for new DArrays */
 #define DARRAY_MINIMUM_CAPACITY 10
@@ -76,6 +78,10 @@ typedef struct DArray {
     void **contents; /**< Array of void* pointers to the actual data */
 } DArray;
 
+typedef int (*DArray_compare_func)(const void *a, const void *b);
+
+int DArray_sort(DArray *array, DArray_compare_func compare_func) __nonnull((1));
+
 /**
  * @brief Create a new dynamic array
  * @param initial_capacity Initial capacity (must be > 0)
@@ -91,7 +97,7 @@ DArray *DArray_create(unsigned int initial_capacity);
  * @return 0 on success, -1 on failure (e.g., memory allocation failure)
  * @note Array will automatically expand if needed
  */
-int DArray_add(DArray *array, void *value);
+int DArray_add(DArray *array, void *value) __nonnull((1));
 
 /**
  * @brief Set element at specific index, returning the old value
@@ -101,8 +107,9 @@ int DArray_add(DArray *array, void *value);
  * @return Previous pointer value at that index, or NULL on error
  * @note Caller is responsible for freeing the returned old value if needed
  * @note Bounds checking is performed - invalid indices are handled gracefully
+ * @note Setting an index does not alter the array size except if (index > size) (should not happen in normal use)
  */
-void *DArray_set(DArray *array, unsigned int index, void *value);
+void *DArray_set(DArray *array, unsigned int index, void *value)  __nonnull((1, 3));
 
 /**
  * @brief Get element at specific index
@@ -111,18 +118,19 @@ void *DArray_set(DArray *array, unsigned int index, void *value);
  * @return Pointer at the specified index, or NULL on error
  * @note Bounds checking is performed - invalid indices return NULL
  */
-void *DArray_get(const DArray *array, unsigned int index);
+void *DArray_get(const DArray *array, unsigned int index) __nonnull((1));
 
 /**
  * @brief Remove and return element at specific index
  * @param array Pointer to DArray
  * @param index Index to remove (must be < size)
  * @return Pointer that was removed, or NULL on error
- * @note Remaining elements are shifted down to fill the gap
- * @note Caller is responsible for freeing the returned pointer if needed
- * @note Bounds checking is performed - invalid indices are handled gracefully
+ * @note The element at the given index is set to NULL; elements after the removed index
+ *       are NOT shifted down. Array size is NOT updated by this operation.
+ * @note Caller is responsible for freeing the returned pointer if needed.
+ * @note Bounds checking is performed - invalid indices are handled gracefully.
  */
-void *DArray_remove(const DArray *array, unsigned int index);
+void *DArray_remove(const DArray *array, unsigned int index) __nonnull((1));
 
 /**
  * @brief Shrink array capacity to match current size
@@ -130,7 +138,7 @@ void *DArray_remove(const DArray *array, unsigned int index);
  * @return 0 on success, -1 on failure
  * @note Reduces memory usage but may cause reallocation on next add
  */
-int DArray_trim_to_size(DArray *array);
+int DArray_trim_to_size(DArray *array) __nonnull((1));
 
 /**
  * @brief Destroy the array structure only
@@ -144,9 +152,10 @@ void DArray_destroy(DArray *array);
 /**
  * @brief Clear all elements from array (set size to 0)
  * @param array Pointer to DArray
- * @note Does NOT free the objects pointed to by the array elements
+ * @note Frees the objects pointed to by the array elements (calls free() on each non-NULL element)
  * @note Capacity remains unchanged
- * @warning Memory leak if you don't free the contained objects first
+ * @warning Only use if ALL elements were dynamically allocated with malloc/calloc.
+ *          Do NOT use if the elements are stack variables, literals, or shared pointers.
  */
 void DArray_clear(DArray *array);
 
@@ -155,7 +164,7 @@ void DArray_clear(DArray *array);
  * @param array Pointer to DArray
  * @note Calls free() on each non-NULL element, then destroys the array
  * @note Use this when all elements were allocated with malloc/calloc
- * @warning Only use if ALL elements were dynamically allocated
+ * @warning Only use if ALL elements were dynamically allocated.
  */
 void DArray_clear_destroy(DArray *array);
 
