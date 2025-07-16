@@ -3,6 +3,7 @@ set(TEST_FILES
         darray_test
         list_test
         radixmap_test
+        string_test
 )
 
 # Handle all test files in one loop

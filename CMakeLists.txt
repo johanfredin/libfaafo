@@ -28,6 +28,8 @@ add_library(libfaafo STATIC
         include/darray.h
         include/radixmap.h
         src/radixmap.c
+        include/bstrlib.h
+        src/bstrlib.c
 )
 
 # Set up include directories
