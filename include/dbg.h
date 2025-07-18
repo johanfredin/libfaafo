@@ -1,5 +1,5 @@
-#ifndef __dbg_h__
-#define __dbg_h__
+#ifndef libfaafo_DGB_H
+#define libfaafo_DGB_H
 
 #include <stdio.h>
 #include <errno.h>

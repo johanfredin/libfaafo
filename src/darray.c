@@ -45,7 +45,7 @@ int DArray_add(DArray *array, void *value) {
 void *DArray_pop(DArray *array) {
     check_return(array, "Can not pop from a NULL array", NULL);
     check_return(array->size > 0, "Array is already empty", NULL);
-    void *element = DArray_remove(array, array->size - 1);
+    void *element = DArray_remove(array, DArray_last_index(array));
     array->size--;
     return element;
 }
@@ -82,12 +82,11 @@ int DArray_trim_to_size(DArray *array) {
 }
 
 void DArray_destroy(DArray *array) {
-    if (array) {
-        if (array->contents) {
-            free(array->contents);
-        }
-        free(array);
+    check(array, "Can not destroy a NULL array", return);
+    if (array->contents) {
+        free(array->contents);
     }
+    free(array);
 }
 
 void DArray_clear(DArray *array) {

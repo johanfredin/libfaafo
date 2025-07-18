@@ -22,21 +22,21 @@ void test_bfromcstr(void) {
 }
 
 void test_blk2bstr(void) {
-    const const_bstring str2 = blk2bstr("test", 10);
+    bstring str2 = blk2bstr("test", 10);
     TEST_ASSERT_EQUAL_STRING("test", str2->data);
     TEST_ASSERT_EQUAL_INT(10, str2->slen);
     bdestroy(str2);
 }
 
 void test_bstrcpy(void) {
-    const const_bstring copy = bstrcpy(str);
+    bstring copy = bstrcpy(str);
     TEST_ASSERT_EQUAL_STRING("test", copy->data);
     TEST_ASSERT_NOT_EQUAL(copy, str);
     bdestroy(copy);
 }
 
 void test_bassign(void) {
-    const const_bstring s2 = bfromcstr("test2");
+    bstring s2 = bfromcstr("test2");
     bassign(str, s2);
     TEST_ASSERT_EQUAL_STRING("test2", str->data);
     bdestroy(s2);
@@ -54,7 +54,7 @@ void test_bassignblk(void) {
 }
 
 void test_bconcat(void) {
-    const const_bstring append = bfromcstr("more");
+    bstring append = bfromcstr("more");
     bconcat(str, append);
     TEST_ASSERT_EQUAL_STRING("testmore", str->data);
     bdestroy(append);
@@ -92,9 +92,9 @@ void test_binstr(void) {
 
 void test_bfindreplace(void) {
     // Set up
-    const const_bstring find = bfromcstr("st");
-    const const_bstring replace = bfromcstr("yomama");
-    const const_bstring nodice = bfromcstr("meh?");
+    bstring find = bfromcstr("st");
+    bstring replace = bfromcstr("yomama");
+    bstring nodice = bfromcstr("meh?");
 
     const int replaced = bfindreplace(str, find, replace, 2);
     TEST_ASSERT_EQUAL(BSTR_OK, replaced);
@@ -129,7 +129,7 @@ void test_bsplit(void) {
 }
 
 void test_bformat(void) {
-    const const_bstring str = bformat("Hello %s you are %d years old", "Johan", 400);
+    bstring str = bformat("Hello %s you are %d years old", "Johan", 400);
     TEST_ASSERT_EQUAL_STRING("Hello Johan you are 400 years old", str->data);
     bdestroy(str);
 }

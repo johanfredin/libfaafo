@@ -30,6 +30,8 @@ add_library(libfaafo STATIC
         src/radixmap.c
         include/bstrlib.h
         src/bstrlib.c
+        include/hashmap.h
+        src/hashmap.c
 )
 
 # Set up include directories

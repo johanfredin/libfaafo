@@ -1,9 +1,5 @@
-//
-// Created by johan on 2025-07-14.
-//
-
-#ifndef RADIXMAP_H
-#define RADIXMAP_H
+#ifndef libfaafo_RADIXMAP_H
+#define libfaafo_RADIXMAP_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -27,7 +23,7 @@ typedef struct RadixMap {
 
 RadixMap *RadixMap_create(size_t max);
 
-void RadixMap_destroy(RadixMap *map) __nonnull((1));;
+void RadixMap_destroy(RadixMap *map) __nonnull((1));
 
 int RadixMap_sort(const RadixMap *map) __nonnull((1));
 
@@ -37,4 +33,4 @@ int RadixMap_add(RadixMap *map, uint32_t key, uint32_t value) __nonnull((1));
 
 int RadixMap_delete(RadixMap *map, RMElement *el) __nonnull((1, 2));
 
-#endif //RADIXMAP_H
+#endif //libfaafo_RADIXMAP_H

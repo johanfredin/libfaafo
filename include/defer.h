@@ -1,5 +1,5 @@
-#ifndef DEFER_H
-#define DEFER_H
+#ifndef libfaafo_DEFER_H
+#define libfaafo_DEFER_H
 
 /*
  * This header provides 'defer' and 'errdefer' functionality similar to Java's try-with-resources
@@ -56,4 +56,4 @@ if (unlikely(err))                                                              
 __VA_ARGS__;                                                                           \
 }
 
-#endif //DEFER_H
+#endif //libfaafo_DEFER_H

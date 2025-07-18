@@ -16,8 +16,8 @@
  *       informational only and not used for memory operations.
  */
 
-#ifndef ARRAY_H
-#define ARRAY_H
+#ifndef libfaafo_DARRAY_H
+#define libfaafo_DARRAY_H
 
 #include <stdlib.h>
 
@@ -47,11 +47,13 @@
 
 
 /**
- * @brief Get the number of elements in the array
+ * @brief Get the number of elements in the array or 0 if the array is NULL
  * @param A Pointer to DArray
  * @return Number of elements currently stored
  */
-#define DArray_size(A) ((A)->size)
+#define DArray_size(A) ((A) ? (A)->size : 0)
+
+#define DArray_last_index(A) (DArray_size(A) - 1)
 
 /**
  * @brief Get the current capacity of the array
@@ -132,6 +134,8 @@ void *DArray_get(const DArray *array, unsigned int index) __nonnull((1));
  */
 void *DArray_remove(const DArray *array, unsigned int index) __nonnull((1));
 
+void *DArray_pop(DArray *array);
+
 /**
  * @brief Shrink array capacity to match current size
  * @param array Pointer to DArray
@@ -168,4 +172,4 @@ void DArray_clear(DArray *array);
  */
 void DArray_clear_destroy(DArray *array);
 
-#endif //ARRAY_H
+#endif //libfaafo_DARRAY_H

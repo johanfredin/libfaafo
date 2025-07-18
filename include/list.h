@@ -1,9 +1,5 @@
-//
-// Created by johan on 2025-06-05.
-//
-
-#ifndef LIST_H
-#define LIST_H
+#ifndef libfaafo_LIST_H
+#define libfaafo_LIST_H
 #include <stddef.h>
 
 #define List_count(L) ((L)->count)
@@ -32,4 +28,4 @@ void *List_remove(List *list, ListNode *node_to_remove);
 
 
 
-#endif //LIST_H
+#endif //libfaafo_LIST_H
