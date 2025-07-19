@@ -18,7 +18,7 @@ static int DArray_expand(DArray *array);
 
 DArray *DArray_create(const unsigned int initial_capacity) {
     check_return(initial_capacity > 0, "initial size must be > 0", NULL);
-    DArray *array = malloc(sizeof(DArray));
+    DArray *array = calloc(1, sizeof(DArray));
     check_mem_return(array, NULL);
     array->contents = calloc(initial_capacity, sizeof(void *));
     check_mem(array->contents, goto catch);
@@ -51,23 +51,23 @@ void *DArray_pop(DArray *array) {
 }
 
 void *DArray_set(DArray *array, const unsigned int index, void *value) {
-    check_return(index < array->size, "Index out of bounds", NULL);
+    check_return(index < array->capacity, "Index out of bounds", NULL);
     void *old_value = array->contents[index];
     array->contents[index] = value;
-    if (index > array->size) {
-        array->size = index;
-    }
-    array->contents[index] = value;
+    // if (index > array->size) {
+    //     array->size = index;
+    // }
+    // array->contents[index] = value;
     return old_value;
 }
 
 void *DArray_get(const DArray *array, const unsigned int index) {
-    check_return(index < array->size, "Index out of bounds", NULL);
+    check_return(index < array->capacity, "Index out of bounds", NULL);
     return array->contents[index];
 }
 
 void *DArray_remove(const DArray *array, const unsigned int index) {
-    check_return(index < array->size, "Index out of bounds", NULL);
+    check_return(index < array->capacity, "Index out of bounds", NULL);
     void *element = array->contents[index];
     array->contents[index] = NULL;
     return element;

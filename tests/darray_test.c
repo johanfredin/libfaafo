@@ -13,12 +13,6 @@ static int *dummy_ival(const int val) {
     return iptr;
 }
 
-static char *dummy_strval(const char *val) {
-    char *sptr = calloc(strlen(val) + 1, sizeof(char));
-    strcpy(sptr, val);
-    return sptr;
-}
-
 void setUp(void) {
     val1 = NULL;
     val2 = NULL;

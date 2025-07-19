@@ -12,41 +12,38 @@ typedef enum Mode {
 } Mode;
 
 static uint32_t default_hash(const void *a) __nonnull((1));
-
 static int default_compare(void *a, void *b);
-
 static HashMapNode *Hashmap_node_create(uint32_t hash, void *key, void *data) __nonnull((2));
-
 static DArray *Hashmap_find_bucket(const HashMap *map, void *key, Mode mode, uint32_t *hash_out);
-
 static int Hashmap_get_node(const HashMap *map, uint32_t hash, const DArray *bucket, void *key);
+static int is_power_of_2(unsigned int n);
 
-HashMap *HashMap_create(const HashMap_compare_fn compare_fn, const HashMap_hash hash) {
+HashMap *HashMap_create(const HashMap_compare_fn compare_fn, const HashMap_hash hash, const unsigned int initial_capacity) {
+    check_return(is_power_of_2(initial_capacity), "Initial capacity must be a power of 2", NULL);
     HashMap *map = calloc(1, sizeof(HashMap));
     check_mem_return(map, NULL);
 
     map->compare = compare_fn ? compare_fn : default_compare;
     map->hash = hash ? hash : (HashMap_hash) default_hash;
-    DArray *buckets = DArray_create(DEFAULT_NUMBER_OF_BUCKETS);
-    check_return(buckets, "Could not create array", NULL);
+    DArray *buckets = DArray_create(initial_capacity);
+    check(buckets, "Could not create array", goto catch);
 
     map->buckets = buckets;
     return map;
+catch:
+    HashMap_destroy(map);
+    return NULL;
 }
 
 void HashMap_destroy(HashMap *map) {
     check(map, "Map is null", return);
     check(map->buckets, "Buckets is null", return);
 
-    for (int i = 0; i < DArray_size(map->buckets); ++i) {
-        // DArray *bucket = DArray_get(map->buckets, i);
-        // for (int j = 0; j < DArray_size(bucket); ++j) {
-        //     free(DArray_get(bucket, j));
-        // }
-        // DArray_destroy(bucket);
+    for (int i = 0; i < DArray_cap(map->buckets); ++i) {
         DArray_clear_destroy(DArray_get(map->buckets, i));
     }
 
+    DArray_destroy(map->buckets);
     free(map);
 }
 
@@ -167,7 +164,7 @@ static HashMapNode *Hashmap_node_create(const uint32_t hash, void *key, void *da
 
 static DArray *Hashmap_find_bucket(const HashMap *map, void *key, const Mode mode, uint32_t *hash_out) {
     const uint32_t hash = map->hash(key);
-    const uint32_t bucket_index = hash % DEFAULT_NUMBER_OF_BUCKETS;
+    const uint32_t bucket_index = hash & (DEFAULT_NUMBER_OF_BUCKETS - 1);
 
     // Store hash in the out param so the caller can use it
     *hash_out = hash;
@@ -192,3 +189,8 @@ static int Hashmap_get_node(const HashMap *map, const uint32_t hash, const DArra
     }
     return -1;
 }
+
+static int is_power_of_2(const unsigned int n) {
+    return n > 0 && (n & (n - 1)) == 0;
+}
+

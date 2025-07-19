@@ -5,6 +5,7 @@ set(TEST_FILES
         radixmap_test
         string_test
         hashmap_test
+        arraylist_test
 )
 
 # Handle all test files in one loop

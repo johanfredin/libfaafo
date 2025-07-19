@@ -32,6 +32,8 @@ add_library(libfaafo STATIC
         src/bstrlib.c
         include/hashmap.h
         src/hashmap.c
+        include/arraylist.h
+        src/arraylist.c
 )
 
 # Set up include directories
