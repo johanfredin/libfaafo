@@ -93,7 +93,7 @@ void test_contains_all_returns_true(void) {
     }
 
     // Verify
-    TEST_ASSERT_TRUE(ArrayList_contains_all(list, (const void **)values, 2));
+    TEST_ASSERT_TRUE(ArrayList_contains_all(list, values, 2));
 }
 
 void test_contains_all_returns_false(void) {
@@ -107,7 +107,7 @@ void test_contains_all_returns_false(void) {
     ArrayList_add(list, values[1]);
 
     // Verify
-    TEST_ASSERT_FALSE(ArrayList_contains_all(list, (const void **)values, 1));
+    TEST_ASSERT_FALSE(ArrayList_contains_all(list, values, 1));
 }
 
 void test_index_of(void) {

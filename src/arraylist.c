@@ -23,23 +23,9 @@ catch:
     return NULL;
 }
 
-void *ArrayList_get(const ArrayList *list, const unsigned int index) {
-    check_return(list != NULL, "list is null", NULL);
-    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
-    return list->data[index];
-}
-
-bool ArrayList_destroy(ArrayList *list) {
-    check_return(list != NULL, "list is null", false);
-    free(list->data);
-    free(list);
-    return true;
-}
-
-bool ArrayList_add(ArrayList *list, void *value) {
+bool ArrayList_add(ArrayList *const list, void *const value) {
     check_return(list != NULL, "list is null", 0);
     check_return(value != NULL, "value is null", 0);
-
     if (list->size >= list->capacity) {
         const bool is_expanded = expand(list);
         check_return(is_expanded, "failed to expand list", false);
@@ -48,18 +34,24 @@ bool ArrayList_add(ArrayList *list, void *value) {
     return true;
 }
 
-bool ArrayList_contains(const ArrayList *list, const void *value) {
-    check_return(list != NULL, "list is null", false);
-    check_return(value != NULL, "value is null", false);
-    for (unsigned int i = 0; i < list->size; i++) {
-        if (list->data[i] == value) {
-            return true;
-        }
-    }
-    return false;
+void *ArrayList_get(const ArrayList *const list, const unsigned int index) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
+    return list->data[index];
 }
 
-bool ArrayList_contains_all(const ArrayList *list, const void **data, const unsigned int data_count) {
+bool ArrayList_destroy(ArrayList *const list) {
+    check_return(list != NULL, "list is null", false);
+    free(list->data);
+    free(list);
+    return true;
+}
+
+bool ArrayList_contains(const ArrayList *const list, const void *const value) {
+    return ArrayList_index_of(list, value) >= 0;
+}
+
+bool ArrayList_contains_all(const ArrayList *const list, void **data, const unsigned int data_count) {
     check_return(list != NULL, "list is null", false);
     for (int i = 0; i < data_count; i++) {
         if (!ArrayList_contains(list, data[i])) {
@@ -69,7 +61,7 @@ bool ArrayList_contains_all(const ArrayList *list, const void **data, const unsi
     return true;
 }
 
-int ArrayList_index_of(const ArrayList *list, const void *value) {
+int ArrayList_index_of(const ArrayList *const list, const void *const value) {
     check_return(list != NULL, "list is null", -1);
     check_return(value != NULL, "value is null", -1);
 
@@ -81,7 +73,15 @@ int ArrayList_index_of(const ArrayList *list, const void *value) {
     return -1;
 }
 
-static bool expand(ArrayList *list) {
+void *ArrayList_set(const ArrayList *const list, const unsigned int index, void *value) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
+    void *old_value = list->data[index];
+    list->data[index] = value;
+    return old_value;
+}
+
+static bool expand(ArrayList *const list) {
     check_return(list != NULL, "list is null", false);
     const unsigned int curr_cap = list->capacity;
     unsigned int new_cap = curr_cap + (curr_cap >> 1); // multiply by 1.5
@@ -100,7 +100,7 @@ static bool expand(ArrayList *list) {
     return true;
 }
 
-static bool resize(ArrayList *list, const size_t new_capacity) {
+static bool resize(ArrayList *const list, const size_t new_capacity) {
     check_return(list, "Can not resize a NULL list", false);
     check_return(new_capacity > 0, "new_size must be > 0", false);
 
