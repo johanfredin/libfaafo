@@ -4,8 +4,10 @@
 
 #ifndef libfaafo_ARRAYLIST_H
 #define libfaafo_ARRAYLIST_H
+
 #include <stdbool.h>
 #include <stdlib.h>
+#include "commons.h"
 
 #define ARRAYLIST_DEFAULT_CAPACITY 10
 #define ArrayList_new() (ArrayList_create(ARRAYLIST_DEFAULT_CAPACITY))
@@ -24,6 +26,7 @@ int ArrayList_index_of(const ArrayList *list, const void *value) __nonnull((1, 2
 void *ArrayList_set(const ArrayList *list, unsigned int index, void *value) __nonnull((1, 3));
 void *ArrayList_get(const ArrayList *list, unsigned int index) __nonnull((1));
 void *ArrayList_remove(ArrayList *list, unsigned int index) __nonnull((1));
+void **ArrayList_clear(ArrayList *list, destructor_fn df) __nonnull((1));
 bool ArrayList_destroy(ArrayList *list) __nonnull((1));
-
+void **ArrayList_clear_destroy(ArrayList *list, destructor_fn df) __nonnull((1));
 #endif

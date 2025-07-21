@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 static bool expand(ArrayList *list);
+
 static bool resize(ArrayList *list, size_t new_capacity);
 
 ArrayList *ArrayList_create(const unsigned int capacity) {
@@ -31,19 +32,6 @@ bool ArrayList_add(ArrayList *const list, void *const value) {
         check_return(is_expanded, "failed to expand list", false);
     }
     list->data[list->size++] = value;
-    return true;
-}
-
-void *ArrayList_get(const ArrayList *const list, const unsigned int index) {
-    check_return(list != NULL, "list is null", NULL);
-    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
-    return list->data[index];
-}
-
-bool ArrayList_destroy(ArrayList *const list) {
-    check_return(list != NULL, "list is null", false);
-    free(list->data);
-    free(list);
     return true;
 }
 
@@ -76,9 +64,78 @@ int ArrayList_index_of(const ArrayList *const list, const void *const value) {
 void *ArrayList_set(const ArrayList *const list, const unsigned int index, void *value) {
     check_return(list != NULL, "list is null", NULL);
     check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
+    check_return(value != NULL, "value is null", NULL);
+    check_return(list->data != NULL, "list->data is NULL", NULL);
+
     void *old_value = list->data[index];
     list->data[index] = value;
     return old_value;
+}
+
+void *ArrayList_get(const ArrayList *const list, const unsigned int index) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
+    return list->data[index];
+}
+
+void *ArrayList_remove(ArrayList *const list, const unsigned int index) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(index < list->size, "index %u out of bounds, current size=%u", NULL, index, list->size);
+    check_return(list->data != NULL, "list->data is NULL", NULL);
+
+    void *removed = list->data[index];
+
+    /*
+     * Shift all elements after removed index one position left.
+     */
+    const unsigned int last_index = list->size - 1;
+    if (index < last_index) {
+        memmove(
+            &list->data[index],
+            &list->data[index + 1],
+            (list->size - index - 1) * sizeof(void *)
+        );
+    }
+
+    list->size--;
+    list->data[list->size] = NULL;
+
+    return removed;
+}
+
+bool ArrayList_destroy(ArrayList *const list) {
+    check_return(list != NULL, "list is null", false);
+    free(list->data);
+    free(list);
+    return true;
+}
+
+void **ArrayList_clear(ArrayList *const list, const destructor_fn df) {
+    check_return(list != NULL, "list is null", NULL);
+    if (df) {
+        for (int i = 0; i < list->size; i++) {
+            df(list->data[i]);
+        }
+        list->size = 0;
+        return list->data;
+    }
+
+    /*
+     * If we are not going to free the data, then give the caller original data
+     * and allocate a new empty array for the list
+     */
+    void **old_data = list->data;
+    list->data = calloc(list->capacity, sizeof(void *));
+    check_return(list->data != NULL, "failed to allocate memory for values", NULL);
+    list->size = 0;
+    return old_data;
+}
+
+void **ArrayList_clear_destroy(ArrayList *const list, const destructor_fn df) {
+    check_return(list != NULL, "list is null", NULL);
+    void **result = ArrayList_clear(list, df);
+    ArrayList_destroy(list);
+    return result;
 }
 
 static bool expand(ArrayList *const list) {

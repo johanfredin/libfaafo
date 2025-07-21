@@ -1,6 +1,5 @@
 #ifndef libfaafo_LIST_H
 #define libfaafo_LIST_H
-#include <stddef.h>
 
 #define List_count(L) ((L)->count)
 #define List_is_empty(L) (List_count(L) == 0)

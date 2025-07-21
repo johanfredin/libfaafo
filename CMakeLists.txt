@@ -34,6 +34,8 @@ add_library(libfaafo STATIC
         src/hashmap.c
         include/arraylist.h
         src/arraylist.c
+        include/commons.h
+        src/commons.c
 )
 
 # Set up include directories
