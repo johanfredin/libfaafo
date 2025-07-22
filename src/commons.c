@@ -3,6 +3,8 @@
 //
 #include "commons.h"
 
+#include <assert.h>
+
 void bdestroy_wrapper(void *b_string) {
-    bdestroy(b_string);
+    assert(bdestroy(b_string) == BSTR_OK);
 }

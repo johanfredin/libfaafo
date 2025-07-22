@@ -3,15 +3,11 @@
 #include <string.h>
 #include <unity.h>
 
+#include "testutil.h"
+
 static DArray *array;
 static int *val1;
 static int *val2;
-
-static int *dummy_ival(const int val) {
-    int *iptr = malloc(sizeof(int));
-    *iptr = val;
-    return iptr;
-}
 
 void setUp(void) {
     val1 = NULL;
@@ -52,8 +48,8 @@ void test_set_get_remove(void) {
     free(val1);
     free(val2);
 
-    int *new_val1 = dummy_ival(666);
-    int *new_val2 = dummy_ival(999);
+    int *new_val1 = TestUtil_allocate_int(666);
+    int *new_val2 = TestUtil_allocate_int(999);
     DArray_set(array, 0, new_val1);
     DArray_set(array, 1, new_val2);
 
@@ -80,8 +76,8 @@ void test_set_get_remove(void) {
 
 void test_push(void) {
     // Set up
-    val1 = dummy_ival(1);
-    val2 = dummy_ival(2);
+    val1 = TestUtil_allocate_int(1);
+    val2 = TestUtil_allocate_int(2);
 
     // Act
     DArray_add(array, val1);
@@ -98,11 +94,11 @@ void test_expand_contract(void) {
     
     // Fill array to trigger expansion
     for (int i = 0; i < old_capacity; i++) {
-        DArray_add(array, dummy_ival(i));
+        DArray_add(array, TestUtil_allocate_int(i));
     }
     
     // Push one more to trigger expansion
-    DArray_add(array, dummy_ival(999));
+    DArray_add(array, TestUtil_allocate_int(999));
     
     // Should have expanded by 50%
     unsigned int expected_capacity = old_capacity + (old_capacity >> 1);
@@ -141,8 +137,8 @@ void test_sort(void) {
 
 void test_sort_int(void) {
     // Set up
-    int *val1 = dummy_ival(2);
-    int *val2 = dummy_ival(1);
+    int *val1 = TestUtil_allocate_int(2);
+    int *val2 = TestUtil_allocate_int(1);
 
     DArray_add(array, val1);
     DArray_add(array, val2);

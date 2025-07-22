@@ -3,9 +3,20 @@
 #include <dbg.h>
 #include <stdlib.h>
 
+#define reset_size_and_capacity(list)               \
+    (list)->size = 0;                               \
+    (list)->capacity=ARRAYLIST_DEFAULT_CAPACITY;
+
 static bool expand(ArrayList *list);
 
 static bool resize(ArrayList *list, size_t new_capacity);
+
+
+struct ArrayList {
+    void **data;
+    unsigned int size;
+    unsigned int capacity;
+};
 
 ArrayList *ArrayList_create(const unsigned int capacity) {
     check_return(capacity > 0, "initial capacity must be > 0", NULL);
@@ -32,6 +43,16 @@ bool ArrayList_add(ArrayList *const list, void *const value) {
         check_return(is_expanded, "failed to expand list", false);
     }
     list->data[list->size++] = value;
+    return true;
+}
+
+bool ArrayList_add_all(ArrayList *const list, void **data, const unsigned int data_count) {
+    check_return(list != NULL, "list is null", false);
+    check_return(data != NULL, "data is null", false);
+    check_return(data_count > 0, "data_count must be > 0", false);
+    for (int i = 0; i < data_count; i++) {
+        ArrayList_add(list, data[i]);
+    }
     return true;
 }
 
@@ -103,6 +124,13 @@ void *ArrayList_remove(ArrayList *const list, const unsigned int index) {
     return removed;
 }
 
+int ArrayList_sort(const ArrayList *list, const ArrayList_compare_fun compare_func) {
+    check_return(list != NULL, "list is null", -1);
+    check_return(compare_func != NULL, "compare_func is null", -1);
+    qsort(list->data, list->size, sizeof(void *), compare_func);
+    return 0;
+}
+
 bool ArrayList_destroy(ArrayList *const list) {
     check_return(list != NULL, "list is null", false);
     free(list->data);
@@ -116,7 +144,8 @@ void **ArrayList_clear(ArrayList *const list, const destructor_fn df) {
         for (int i = 0; i < list->size; i++) {
             df(list->data[i]);
         }
-        list->size = 0;
+        memset(list->data, 0, list->size * sizeof(void *));
+        reset_size_and_capacity(list);
         return list->data;
     }
 
@@ -127,7 +156,7 @@ void **ArrayList_clear(ArrayList *const list, const destructor_fn df) {
     void **old_data = list->data;
     list->data = calloc(list->capacity, sizeof(void *));
     check_return(list->data != NULL, "failed to allocate memory for values", NULL);
-    list->size = 0;
+    reset_size_and_capacity(list);
     return old_data;
 }
 
@@ -136,6 +165,39 @@ void **ArrayList_clear_destroy(ArrayList *const list, const destructor_fn df) {
     void **result = ArrayList_clear(list, df);
     ArrayList_destroy(list);
     return result;
+}
+
+unsigned int ArrayList_size(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", 0);
+    return list->size;
+}
+
+unsigned int ArrayList_capacity(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", 0);
+    return list->capacity;
+}
+
+bool ArrayList_is_empty(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", false);
+    return list->size == 0;
+}
+
+void *ArrayList_last(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(list->size > 0, "list is empty", NULL);
+    return list->data[list->size - 1];
+}
+
+void *ArrayList_first(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", NULL);
+    check_return(list->size > 0, "list is empty", NULL);
+    return list->data[0];
+}
+
+int ArrayList_last_index(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", -1);
+    check_return(list->size > 0, "list is empty", -1);
+    return (int) list->size - 1;
 }
 
 static bool expand(ArrayList *const list) {

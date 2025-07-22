@@ -7,6 +7,8 @@
 
 #define deref_int(ptr) (*(int*)(ptr))
 
-
 #define deref_string(ptr) ((char*)(ptr))
+
+#define deref_float(ptr) (*(float*)(ptr))
+
 #endif //libfaafo_PTR_DEREF_H

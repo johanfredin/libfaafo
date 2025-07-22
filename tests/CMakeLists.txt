@@ -10,7 +10,9 @@ set(TEST_FILES
 
 # Handle all test files in one loop
 foreach(test ${TEST_FILES})
-    add_executable(${test} ${test}.c)
+    add_executable(${test} ${test}.c
+            testutil.h
+            testutil.c)
     target_link_libraries(${test}
             PRIVATE
             libfaafo
