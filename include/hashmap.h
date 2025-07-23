@@ -1,35 +1,43 @@
+//
+// Created by johan on 2025-07-23.
+//
+
 #ifndef libfaafo_HASHMAP_H
 #define libfaafo_HASHMAP_H
+#include <commons.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "list.h"
 
-#include "darray.h"
-#include <stdint.h>
+#define HASHMAP_DEFAULT_CAPACITY 16
 
-#define DEFAULT_NUMBER_OF_BUCKETS 16
+#define HashMap_new_type_bstring(hash) (HashMap_create(HASHMAP_DEFAULT_CAPACITY, (hash), bstrcmp))
 
-#define HashMap_new() (HashMap_create(NULL, NULL, DEFAULT_NUMBER_OF_BUCKETS))
+typedef size_t (*hash_fn)(const void *key);
+typedef bool (*equals_fn)(const void *key1, const void *key2);
 
-typedef int (*HashMap_compare_fn)(void *a, void *b);
-
-typedef uint32_t (*HashMap_hash)(void *key);
+typedef struct MapEntry {
+    void *key;
+    void *value;
+    size_t hash;
+} MapEntry;
 
 typedef struct HashMap {
-    DArray *buckets;
-    HashMap_compare_fn compare;
-    HashMap_hash hash;
+    List **buckets;
+    size_t capacity;
+    size_t size;
+    hash_fn hash_fn;
+    equals_fn equals_fn;
 } HashMap;
 
-typedef struct HashMapNode {
-    void *key;
-    void *data;
-    uint32_t hash;
-} HashMapNode;
-
-typedef int (*HashMap_traverse_cb)(HashMapNode *node);
-HashMap *HashMap_create(HashMap_compare_fn compare_fn, HashMap_hash hash, unsigned int initial_capacity);
+HashMap *HashMap_create(size_t capacity, hash_fn hash_fn, equals_fn equals_fn);
+void *HashMap_put(const HashMap *map, void *key, void *value);
+void *HashMap_get(const HashMap *map, void *key);
+// void *HashMap_remove(const HashMap *map, void *key);
 void HashMap_destroy(HashMap *map);
-int HashMap_put(HashMap *map, void *key, void *data) __nonnull((1,2));
-void *HashMap_get(HashMap *map, void *key) __nonnull((1, 2));
-int HashMap_traverse(const HashMap *map, HashMap_traverse_cb traverse_cb) __nonnull((1, 2));
-void *HashMap_delete(HashMap *map, void *key) __nonnull((2));
+// bool HashMap_contains_key(const HashMap *map, void *key);
+// bool HashMap_is_empty(const HashMap *map);
+
+
 
 #endif //libfaafo_HASHMAP_H
