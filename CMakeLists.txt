@@ -19,13 +19,11 @@ FetchContent_MakeAvailable(unity)
 
 # Create the library
 add_library(libfaafo STATIC
-        include/list.h
-        src/list.c
+        include/linkedlist.h
+        src/linkedlist.c
         include/dbg.h
         include/ptr_deref.h
         include/defer.h
-        src/darray.c
-        include/darray.h
         include/radixmap.h
         src/radixmap.c
         include/bstrlib.h

@@ -13,7 +13,7 @@ void setUp(void) {
 }
 
 void tearDown(void) {
-    ArrayList_clear_destroy(static_list, bdestroy_wrapper);
+    ArrayList_clear_destroy(static_list, bstring_destroy);
 }
 
 void test_new(void) {

@@ -1,7 +1,6 @@
 # Define the list of test files
 set(TEST_FILES
-        darray_test
-        list_test
+        linkedlist_test
         radixmap_test
         string_test
         arraylist_test

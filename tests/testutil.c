@@ -14,3 +14,12 @@ int testutil_sort_int(void **a, void **b) {
     const int b_val = *(int*)*b;
     return a_val - b_val;
 }
+
+size_t testutil_hash_fn_bstring(const void *key) {
+    size_t hash = 0;
+    bstring str = (bstring) key;
+    for (int i = 0; i < blength(str); i++) {
+        hash = 31 * hash + bchar(str, i);
+    }
+    return hash;
+}

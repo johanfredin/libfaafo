@@ -135,8 +135,10 @@ void test_bformat(void) {
 }
 
 void test_bchar(void) {
-    const char c = bchar(str, 0);
-    TEST_ASSERT_EQUAL(c, 't');
+    TEST_ASSERT_EQUAL(bchar(str, 0), 't');
+    TEST_ASSERT_EQUAL(bchar(str, 1), 'e');
+    TEST_ASSERT_EQUAL(bchar(str, 2), 's');
+    TEST_ASSERT_EQUAL(bchar(str, 3), 't');
     const char hmm = bchar(str, 16);
     TEST_ASSERT_EQUAL(hmm, '\0');
 }

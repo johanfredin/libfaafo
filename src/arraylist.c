@@ -5,12 +5,11 @@
 
 #define reset_size_and_capacity(list)               \
     (list)->size = 0;                               \
-    (list)->capacity=ARRAYLIST_DEFAULT_CAPACITY;
+    (list)->capacity=ARRAYLIST_DEFAULT_CAPACITY
 
 static bool expand(ArrayList *list);
 
 static bool resize(ArrayList *list, size_t new_capacity);
-
 
 struct ArrayList {
     void **data;
@@ -154,7 +153,7 @@ void **ArrayList_clear(ArrayList *const list, const destructor_fn df) {
      * and allocate a new empty array for the list
      */
     void **old_data = list->data;
-    list->data = calloc(list->capacity, sizeof(void *));
+    list->data = calloc(ARRAYLIST_DEFAULT_CAPACITY, sizeof(void *));
     check_return(list->data != NULL, "failed to allocate memory for values", NULL);
     reset_size_and_capacity(list);
     return old_data;
@@ -201,7 +200,6 @@ int ArrayList_last_index(const ArrayList *const list) {
 }
 
 static bool expand(ArrayList *const list) {
-    check_return(list != NULL, "list is null", false);
     const unsigned int curr_cap = list->capacity;
     unsigned int new_cap = curr_cap + (curr_cap >> 1); // multiply by 1.5
     if (new_cap <= curr_cap) {
@@ -210,6 +208,7 @@ static bool expand(ArrayList *const list) {
     const bool resized = resize(list, new_cap);
     check_return(resized, "failed to resize list", false);
 
+    // Fill out added memory with 0
     memset(
         list->data + curr_cap,
         0,
@@ -220,11 +219,8 @@ static bool expand(ArrayList *const list) {
 }
 
 static bool resize(ArrayList *const list, const size_t new_capacity) {
-    check_return(list, "Can not resize a NULL list", false);
-    check_return(new_capacity > 0, "new_size must be > 0", false);
-
     void *data = realloc(list->data, new_capacity * sizeof(void *));
-    check_mem_return(data, -1);
+    check_mem_return(data, false);
     list->data = data;
     list->capacity = new_capacity;
     return true;
