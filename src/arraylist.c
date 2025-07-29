@@ -15,9 +15,10 @@ struct ArrayList {
     void **data;
     unsigned int size;
     unsigned int capacity;
+    destructor_fn df;
 };
 
-ArrayList *ArrayList_create(const unsigned int capacity) {
+ArrayList *ArrayList_create(const unsigned int capacity, const destructor_fn df) {
     check_return(capacity > 0, "initial capacity must be > 0", NULL);
     ArrayList *list = calloc(1, sizeof(ArrayList));
     check_return(list != NULL, "failed to allocate memory for list", NULL);
@@ -28,6 +29,7 @@ ArrayList *ArrayList_create(const unsigned int capacity) {
     list->data = data;
     list->capacity = capacity;
     list->size = 0;
+    list->df = df;
     return list;
 catch:
     ArrayList_destroy(list);
@@ -90,6 +92,11 @@ void *ArrayList_set(const ArrayList *const list, const unsigned int index, void 
     void *old_value = list->data[index];
     list->data[index] = value;
     return old_value;
+}
+
+destructor_fn ArrayList_get_df(const ArrayList *const list) {
+    check_return(list != NULL, "list is null", NULL);
+    return list->df;
 }
 
 void *ArrayList_get(const ArrayList *const list, const unsigned int index) {

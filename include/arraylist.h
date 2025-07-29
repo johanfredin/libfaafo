@@ -9,12 +9,12 @@
 #include "commons.h"
 
 #define ARRAYLIST_DEFAULT_CAPACITY 10
-#define ArrayList_new() (ArrayList_create(ARRAYLIST_DEFAULT_CAPACITY))
+#define ArrayList_new() (ArrayList_create(ARRAYLIST_DEFAULT_CAPACITY, free))
 
 typedef struct ArrayList ArrayList;
 typedef int (*ArrayList_compare_fun)(const void *a, const void *b);
 
-ArrayList *ArrayList_create(unsigned int capacity);
+ArrayList *ArrayList_create(unsigned int capacity, destructor_fn df);
 bool ArrayList_add(ArrayList *list, void *value) __nonnull((1, 2));
 bool ArrayList_add_all(ArrayList *list, void **data, unsigned int data_count) __nonnull((1, 2));
 bool ArrayList_contains(const ArrayList *list, const void *value) __nonnull((1, 2));
@@ -35,5 +35,7 @@ int ArrayList_sort(const ArrayList *list, ArrayList_compare_fun compare_func) __
 void **ArrayList_clear(ArrayList *list, destructor_fn df) __nonnull((1));
 bool ArrayList_destroy(ArrayList *list) __nonnull((1));
 void **ArrayList_clear_destroy(ArrayList *list, destructor_fn df) __nonnull((1));
+
+destructor_fn ArrayList_get_df(const ArrayList *list) __nonnull((1));
 
 #endif

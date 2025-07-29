@@ -23,7 +23,7 @@ void test_new(void) {
 }
 
 void test_create(void) {
-    ArrayList *list2 = ArrayList_create(20);
+    ArrayList *list2 = ArrayList_create(20, bstring_destroy);
     TEST_ASSERT_NOT_NULL(list2);
     TEST_ASSERT_EQUAL_INT(20, ArrayList_capacity(list2));
     TEST_ASSERT_EQUAL_INT(0, ArrayList_size(list2));

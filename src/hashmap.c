@@ -76,7 +76,7 @@ void *HashMap_get(const HashMap *map, void *key) {
     const size_t index = hash & (map->capacity - 1); // Java style but will break if cap not powers of 2
     LinkedList *bucket = map->buckets[index];
     check_return(bucket, "No entry found", NULL);
-    if (List_size(bucket) == 1) {
+    if (LinkedList_size(bucket) == 1) {
         const MapEntry *entry = bucket->first->value;
         return entry->value; // If only one entry in bucket we don't need to do equals checks.
     }
