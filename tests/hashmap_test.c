@@ -9,8 +9,8 @@ static HashMap *map;
 
 static void test_destroy_function(void *ptr) {
     MapEntry *me = ptr;
-    bstring_destroy(me->key);
-    bstring_destroy(me->value);
+    Commons_bstring_destroy(me->key);
+    Commons_bstring_destroy(me->value);
     free(me);
 }
 

@@ -10,31 +10,48 @@ static Node *last_node(const LinkedList *list);
 LinkedList *LinkedList_create(const destructor_fn node_value_df) {
     LinkedList *list = calloc(1, sizeof(LinkedList));
     check_return(list != NULL, "Failed to allocate memory for List", NULL);
-    list->node_value_df = node_value_df ? node_value_df : NOOP_DESTRUCTOR;
+    list->node_value_df = node_value_df ? node_value_df : NOOP;
     return list;
 }
 
-LinkedList *LinkedList_from_ArrayList(ArrayList *const array_list) {
+LinkedList *LinkedList_from_ArrayList(ArrayList *const array_list, const bool destroy_src) {
     check_return(array_list, "ArrayList is null", NULL);
     LinkedList *list = LinkedList_create(ArrayList_get_df(array_list));
     check_return(list, "Failed to create LinkedList", NULL);
     for (int i = 0; i < ArrayList_size(array_list); i++) {
-        void *cpy = memcpy(malloc(sizeof(void *)), ArrayList_get(array_list, i), sizeof(void *));
-        LinkedList_push(list, cpy);
+        LinkedList_push(list, ArrayList_get(array_list, i));
+    }
+
+    if (destroy_src) {
+        ArrayList_destroy(array_list);
     }
     return list;
 }
 
-LinkedList *LinkedList_from_array(void **const array, const unsigned int array_size, const destructor_fn df) {
+LinkedList *LinkedList_from_array(void *const array, const size_t n_elements, const size_t element_size, const destructor_fn node_value_df) {
     check_return(array, "Array is null", NULL);
-    check_return(array_size > 0, "Array size must be > 0", NULL);
-    LinkedList *list = LinkedList_create(df);
-    check_return(list, "Failed to create LinkedList", NULL);
-    for (int i = 0; i < array_size; i++) {
-        void *cpy = memcpy(malloc(sizeof(void *)), array[i], sizeof(void *));
-        LinkedList_push(list, cpy);
+    check_return(n_elements > 0, "Array size must be > 0", NULL);
+    LinkedList *list = LinkedList_create(node_value_df);
+    check(list, "Failed to create LinkedList", NULL);
+    for (size_t i = 0, offset = (i * element_size);
+         i < n_elements;
+         i++, offset += element_size
+    ) {
+        void *new_node = calloc(1, element_size);
+        check_mem(new_node, goto catch);
+
+        void *src = (char*)array + offset;
+        memcpy(new_node, src, element_size);
+        check(LinkedList_push(list, new_node), "Could not push array value to list", {
+            node_value_df(new_node);
+            free(new_node);
+            goto catch;
+        });
     }
     return list;
+catch:
+    LinkedList_destroy(list);
+    return NULL;
 }
 
 bool LinkedList_push(LinkedList *const list, void *value) {
@@ -61,12 +78,12 @@ bool LinkedList_push(LinkedList *const list, void *value) {
     return true;
 }
 
-bool LinkedList_push_all(LinkedList *const list, void **values, const unsigned int values_count) {
+bool LinkedList_push_all(LinkedList *const list, void **data, const size_t n_elements) {
     check_return(list, "List is null", false);
-    check_return(values != NULL, "values is null", false);
-    check_return(values_count > 0, "values_count must be > 0", false);
-    for (int i = 0; i < values_count; i++) {
-        check(LinkedList_push(list, values[i]), "Failed to push value", false);
+    check_return(data != NULL, "values is null", false);
+    check_return(n_elements > 0, "values_count must be > 0", false);
+    for (int i = 0; i < n_elements; i++) {
+        check(LinkedList_push(list, data[i]), "Failed to push value", false);
     }
     return true;
 }
@@ -117,7 +134,7 @@ void *LinkedList_remove(LinkedList *list, Node *node_to_remove) {
 
     list->size--;
     list->node_value_df(removed); // Free the value using provided destroy function
-    free(node_to_remove);         // Free the node itself
+    free(node_to_remove); // Free the node itself
     return removed;
 }
 
@@ -136,6 +153,7 @@ void LinkedList_clear(LinkedList *const list) {
         free(current);
         current = next;
     }
+    list->first = NULL;
     list->size = 0;
 }
 

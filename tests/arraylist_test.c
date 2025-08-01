@@ -13,7 +13,7 @@ void setUp(void) {
 }
 
 void tearDown(void) {
-    ArrayList_clear_destroy(static_list, bstring_destroy);
+    ArrayList_clear_destroy(static_list, Commons_bstring_destroy);
 }
 
 void test_new(void) {
@@ -23,7 +23,7 @@ void test_new(void) {
 }
 
 void test_create(void) {
-    ArrayList *list2 = ArrayList_create(20, bstring_destroy);
+    ArrayList *list2 = ArrayList_create(20, Commons_bstring_destroy);
     TEST_ASSERT_NOT_NULL(list2);
     TEST_ASSERT_EQUAL_INT(20, ArrayList_capacity(list2));
     TEST_ASSERT_EQUAL_INT(0, ArrayList_size(list2));
@@ -259,7 +259,7 @@ void test_clear_no_destroy_fn(void) {
     TEST_ASSERT_EQUAL_INT(ARRAYLIST_DEFAULT_CAPACITY, ArrayList_size(new_list));
 
     // Act
-    void **cleared = ArrayList_clear(new_list, NOOP_DESTRUCTOR);
+    void **cleared = ArrayList_clear(new_list, NOOP);
 
     // Verify
     TEST_ASSERT_EQUAL_INT(0, ArrayList_size(new_list));

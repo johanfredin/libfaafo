@@ -11,4 +11,6 @@
 
 #define deref_float(ptr) (*(float*)(ptr))
 
+#define deref_bstring(ptr) (((bstring)(ptr))->data)
+
 #endif //libfaafo_PTR_DEREF_H
