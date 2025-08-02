@@ -90,20 +90,26 @@ void *HashMap_get(const HashMap *map, void *key) {
     return NULL;
 }
 
-void HashMap_destroy(HashMap *map) {
-    check(map, "Map is null", return);
-    HashMap_clear(map);
+bool HashMap_destroy(HashMap *map) {
+    check_return(map, "Map is null", false);
+    const bool cleared = HashMap_clear(map);
+    check_return(cleared, "Could not clear map", false);
     free(map->buckets);
     free(map);
+    return true;
 }
 
-LinkedList **HashMap_clear(HashMap *map) {
-    check_return(map, "Map is null", NULL);
+bool HashMap_clear(HashMap *map) {
+    check_return(map, "Map is null", false);
     for (size_t i = 0; i < map->capacity; i++) {
-        LinkedList_destroy(map->buckets[i]);
+        check_return(
+            LinkedList_destroy(map->buckets[i]),
+            "There was an error destroying the buckets at position: %d. Memory leak may have occurred", i,
+            false
+        );
     }
     reset_size_and_capacity(map);
-    return map->buckets;
+    return true;
 }
 
 static size_t generate_hash(const HashMap *map, const void *key) {
