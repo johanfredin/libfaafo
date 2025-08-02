@@ -32,9 +32,8 @@ void *ArrayList_first(const ArrayList *list) __nonnull((1));
 int ArrayList_last_index(const ArrayList *list) __nonnull((1));
 int ArrayList_sort(const ArrayList *list, ArrayList_compare_fun compare_func) __nonnull((1, 2));
 
-void **ArrayList_clear(ArrayList *list, destructor_fn df) __nonnull((1));
+bool ArrayList_clear(ArrayList *list) __nonnull((1));
 bool ArrayList_destroy(ArrayList *list) __nonnull((1));
-void **ArrayList_clear_destroy(ArrayList *list, destructor_fn df) __nonnull((1));
 
 destructor_fn ArrayList_get_df(const ArrayList *list) __nonnull((1));
 

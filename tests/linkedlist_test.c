@@ -13,11 +13,18 @@ static void from_arraylist(bool is_destroy_src);
 static LinkedList *list;
 
 void setUp(void) {
-     list = NULL;
+    list = NULL;
 }
 
 void tearDown() {
-    LinkedList_destroy(list);
+    /*
+     * Some tests have their own local lists that result in the global list being null.
+     * However, when the global list is used, we want to (as best we can) ensure that the destroy
+     * function works as intended
+    */
+    if (list) {
+        TEST_ASSERT_TRUE(LinkedList_destroy(list));
+    }
 }
 
 void test_create(void) {
@@ -56,7 +63,7 @@ static void from_arraylist(const bool is_destroy_src) {
     ArrayList_add_all(arr, data, 3);
 
     // Act
-    list = LinkedList_from_ArrayList(arr, is_destroy_src);
+    list = LinkedList_from_ArrayList(arr, sizeof(int), is_destroy_src);
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
     TEST_ASSERT_EQUAL_INT_MESSAGE(10, deref_int(LinkedList_first(list)), "Wrong first element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(20, deref_int(list->first->next->value), "Wrong middle element");
@@ -105,10 +112,10 @@ void test_push_all_and_find_node(void) {
     bstring test4 = bfromcstr("test4 data");
 
     // Test error
-    TEST_ASSERT_FALSE(LinkedList_push_all(list, (void*[]){NULL}, 0));
+    TEST_ASSERT_FALSE(LinkedList_push_all(list, (void*[]){}, 0));
 
     // Act
-    const bool pushed = LinkedList_push_all(list, (void*[]){test1, test2, test3, test4}, 4);
+    const bool pushed = LinkedList_push_all(list, (void *[]){test1, test2, test3, test4}, 4);
     TEST_ASSERT_TRUE(pushed);
     TEST_ASSERT_EQUAL_INT_MESSAGE(4, list->size, "Wrong amount of elements in list");
     const Node *res1 = LinkedList_find_node(list, test1);
@@ -156,7 +163,7 @@ void test_contains(void) {
     float *match2 = TestUtil_allocate_float(30.0f);
     TEST_ASSERT_FALSE(LinkedList_contains(list, no_match));
 
-    LinkedList_push_all(list, (void*[]){match1, match2}, 2);
+    LinkedList_push_all(list, (void *[]){match1, match2}, 2);
     TEST_ASSERT_TRUE(LinkedList_contains(list, match1));
     TEST_ASSERT_TRUE(LinkedList_contains(list, match2));
 
@@ -189,12 +196,12 @@ void test_clear(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
 
     // Act
-    LinkedList_clear(list);
+    const bool cleared = LinkedList_clear(list);
 
     // Verify
+    TEST_ASSERT_TRUE_MESSAGE(cleared, "Clearing failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, list->size, "List is not empty");
     TEST_ASSERT_NULL_MESSAGE(list->first, "First element is null");
-
 }
 
 int main(void) {
@@ -211,5 +218,3 @@ int main(void) {
     RUN_TEST(test_clear);
     return UNITY_END();
 }
-
-

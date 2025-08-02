@@ -137,40 +137,22 @@ int ArrayList_sort(const ArrayList *list, const ArrayList_compare_fun compare_fu
     return 0;
 }
 
-bool ArrayList_destroy(ArrayList *const list) {
+bool ArrayList_clear(ArrayList *const list) {
     check_return(list != NULL, "list is null", false);
-    free(list->data);
-    free(list);
+    for (int i = 0; i < list->size; i++) {
+        list->df(list->data[i]);
+    }
+    memset(list->data, 0, list->size * sizeof(void *));
+    reset_size_and_capacity(list);
     return true;
 }
 
-void **ArrayList_clear(ArrayList *const list, const destructor_fn df) {
+bool ArrayList_destroy(ArrayList *const list) {
     check_return(list != NULL, "list is null", NULL);
-    if (df) {
-        for (int i = 0; i < list->size; i++) {
-            df(list->data[i]);
-        }
-        memset(list->data, 0, list->size * sizeof(void *));
-        reset_size_and_capacity(list);
-        return list->data;
-    }
-
-    /*
-     * If we are not going to free the data, then give the caller original data
-     * and allocate a new empty array for the list
-     */
-    void **old_data = list->data;
-    list->data = calloc(ARRAYLIST_DEFAULT_CAPACITY, sizeof(void *));
-    check_return(list->data != NULL, "failed to allocate memory for values", NULL);
-    reset_size_and_capacity(list);
-    return old_data;
-}
-
-void **ArrayList_clear_destroy(ArrayList *const list, const destructor_fn df) {
-    check_return(list != NULL, "list is null", NULL);
-    void **result = ArrayList_clear(list, df);
-    ArrayList_destroy(list);
-    return result;
+    check_return(ArrayList_clear(list), "ArrayList was not cleared", false);
+    free(list->data);
+    free(list);
+    return true;
 }
 
 unsigned int ArrayList_size(const ArrayList *const list) {

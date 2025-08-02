@@ -30,7 +30,7 @@ typedef struct LinkedList {
  * @return a dynamically allocated List
  */
 LinkedList *LinkedList_create(destructor_fn node_value_df);
-LinkedList *LinkedList_from_ArrayList(ArrayList *array_list, bool destroy_src) __nonnull((1));
+LinkedList *LinkedList_from_ArrayList(ArrayList *array_list, size_t element_size, bool destroy_src) __nonnull((1));
 LinkedList *LinkedList_from_array(void *array, size_t n_elements, size_t element_size, destructor_fn node_value_df) __nonnull((1));
 bool LinkedList_push(LinkedList *list, void *value); __nonnull((1, 2));
 bool LinkedList_push_all(LinkedList *list, void **data, size_t n_elements); __nonnull((1, 2));
@@ -39,7 +39,7 @@ void *LinkedList_find_last(const LinkedList *list); __nonnull((1));
 bool LinkedList_contains(const LinkedList *list, const void *value); __nonnull((1, 2));
 void *LinkedList_pop(LinkedList *list); __nonnull((1));
 void *LinkedList_remove(LinkedList *list, Node *node_to_remove); __nonnull((1, 2));
-void LinkedList_destroy(LinkedList *list); __nonnull((1));
-void LinkedList_clear(LinkedList *list); __nonnull((1));
+bool LinkedList_destroy(LinkedList *list); __nonnull((1));
+bool LinkedList_clear(LinkedList *list); __nonnull((1));
 
 #endif //libfaafo_LIST_H
