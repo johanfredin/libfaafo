@@ -14,8 +14,6 @@
 
 typedef size_t (*hash_fn)(const void *key);
 
-typedef bool (*equals_fn)(const void *key1, const void *key2);
-
 typedef struct MapEntry {
     void *key;
     void *value;

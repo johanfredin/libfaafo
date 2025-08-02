@@ -309,7 +309,7 @@ void test_sort_strings(void) {
     TEST_ASSERT_EQUAL_STRING("Evelyn", ((bstring)(ArrayList_get(list, 2)))->data);
 
     // Act
-    const int sort = ArrayList_sort(list, (ArrayList_compare_fun)testutil_sort_bstring);
+    const int sort = ArrayList_sort(list, (ArrayList_compare_fun)TestUtil_sort_bstring);
 
     // Verify
     TEST_ASSERT_EQUAL_INT(0, sort);
@@ -333,7 +333,7 @@ void test_sort_ints(void) {
     TEST_ASSERT_EQUAL_INT(60, deref_int(ArrayList_get(list, 2)));
 
     // Act
-    const int sort = ArrayList_sort(list, (ArrayList_compare_fun)testutil_sort_int);
+    const int sort = ArrayList_sort(list, (ArrayList_compare_fun)TestUtil_sort_int);
 
     // Verify
     TEST_ASSERT_EQUAL_INT(0, sort);

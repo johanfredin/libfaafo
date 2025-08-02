@@ -6,17 +6,17 @@
 #include <bstrlib.h>
 #include <ptr_deref.h>
 
-int testutil_sort_bstring(void **a, void **b) {
+int TestUtil_sort_bstring(void **a, void **b) {
     return bstrcmp(*a, *b);
 }
 
-int testutil_sort_int(void **a, void **b) {
+int TestUtil_sort_int(void **a, void **b) {
     const int a_val = *(int*)*a;
     const int b_val = *(int*)*b;
     return a_val - b_val;
 }
 
-size_t testutil_hash_fn_bstring(const void *key) {
+size_t TestUtil_hash_fn_bstring(const void *key) {
     size_t hash = 0;
     bstring str = (bstring) key;
     for (int i = 0; i < blength(str); i++) {
@@ -25,6 +25,6 @@ size_t testutil_hash_fn_bstring(const void *key) {
     return hash;
 }
 
-size_t testutil_hash_fn_int(const void *key) {
+size_t TestUtil_hash_fn_int(const void *key) {
     return key ? (size_t)(deref_int(key)) : 0;
 }

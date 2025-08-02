@@ -36,7 +36,7 @@ void tearDown(void) {
 void test_create(void) {
     map = HashMap_create(
         HASHMAP_DEFAULT_CAPACITY,
-        testutil_hash_fn_bstring,
+        TestUtil_hash_fn_bstring,
         testutil_equals_fn_bstring,
         test_destroy_function
     );
@@ -45,7 +45,7 @@ void test_create(void) {
     TEST_ASSERT_EQUAL_INT(map->capacity, HASHMAP_DEFAULT_CAPACITY);
     TEST_ASSERT_EQUAL_INT(map->size, 0);
     TEST_ASSERT_EQUAL_PTR(testutil_equals_fn_bstring, map->equals_fn);
-    TEST_ASSERT_EQUAL_PTR(testutil_hash_fn_bstring, map->hash_fn);
+    TEST_ASSERT_EQUAL_PTR(TestUtil_hash_fn_bstring, map->hash_fn);
     TEST_ASSERT_NOT_NULL(map->buckets);
     for (int i = 0; i < HASHMAP_DEFAULT_CAPACITY; i++) {
         TEST_ASSERT_NULL(map->buckets[i]);
@@ -54,7 +54,7 @@ void test_create(void) {
 
 void test_put(void) {
     // Set up
-    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring,
+    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, TestUtil_hash_fn_bstring, testutil_equals_fn_bstring,
                          test_destroy_function);
     bstring key1 = bfromcstr("key");
     bstring value1 = bfromcstr("value");
@@ -82,7 +82,7 @@ void test_put(void) {
 
 void test_get_no_resize_required(void) {
     // Set up
-    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring,
+    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, TestUtil_hash_fn_bstring, testutil_equals_fn_bstring,
                          test_destroy_function);
     const size_t size = 10;
     for (int i = 0; i < size; i++) {
@@ -107,7 +107,7 @@ void test_get_resize_required(void) {
     // Set up
     const size_t new_cap = HASHMAP_DEFAULT_CAPACITY << 1;
 
-    map = HashMap_create(new_cap, testutil_hash_fn_int, testutil_equals_fn_int, test_destroy_function_int);
+    map = HashMap_create(new_cap, TestUtil_hash_fn_int, TestUtil_equals_fn_int, test_destroy_function_int);
     for (int i = 0; i < new_cap; i++) {
         int *key = TestUtil_allocate_int(i + 1);
         int *value = TestUtil_allocate_int(i + 10);

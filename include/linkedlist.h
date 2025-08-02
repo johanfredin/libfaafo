@@ -5,8 +5,9 @@
  * @file linkedlist.h
  * @brief Generic singly linked list implementation
  * 
- * A generic singly linked list that only tracks the first node.
- * Supports custom destructor functions for memory management.
+ * A generic singly linked list that tracks both first and last nodes
+ * for efficient operations at both ends. Supports custom destructor 
+ * functions for memory management.
  */
 
 #include <arraylist.h>
@@ -20,7 +21,10 @@
 #define LinkedList_is_empty(L) (LinkedList_size(L) == 0)
 
 /** Get the value of the first node, returns NULL if list or first node is NULL */
-#define LinkedList_first(L) ((L)->first ? (L)->first->value : NULL)
+#define LinkedList_first(L) ((L) && (L)->first ? (L)->first->value : NULL)
+
+/** Get the value of the last node, returns NULL if list or last node is NULL */
+#define LinkedList_last(L) ((L) && (L)->last ? (L)->last->value : NULL)
 
 /** Create a new LinkedList with free() as the default destructor */
 #define LinkedList_new() (LinkedList_create(free))
@@ -42,12 +46,12 @@ typedef struct ListNode {
 } Node;
 
 /**
- * @brief A singly linked list structure
+ * @brief A singly linked list structure with first and last pointers
  */
 typedef struct LinkedList {
     size_t size;                /**< Number of nodes in the list */
     Node *first;               /**< Pointer to the first node */
-    Node *last;                /**< Pointer to the last node */
+    Node *last;                /**< Pointer to the last node for O(1) append */
     destructor_fn node_value_df;  /**< Function to destroy node values */
 } LinkedList;
 
@@ -100,6 +104,7 @@ void *LinkedList_to_array(LinkedList *list, size_t element_size, bool destroy_sr
  * @param list The LinkedList to add to. Must not be NULL.
  * @param value The value to add. Must not be NULL.
  * @return true on success, false on failure
+ * @note O(1) operation thanks to last pointer
  */
 bool LinkedList_push(LinkedList *list, void *value) __nonnull((1, 2));
 
@@ -109,40 +114,37 @@ bool LinkedList_push(LinkedList *list, void *value) __nonnull((1, 2));
  * @param data Array of pointers to add. Must not be NULL.
  * @param n_elements Number of elements to add
  * @return true on success, false on failure
+ * @note O(n) operation where n is the number of elements to add
  */
 bool LinkedList_push_all(LinkedList *list, void **data, size_t n_elements) __nonnull((1, 2));
 
 /**
- * @brief Find a node containing a specific value (by pointer comparison)
+ * @brief Find a node containing a specific value (by value comparison using passed in ef)
  * @param list The LinkedList to search. Must not be NULL.
  * @param value The value to search for. Must not be NULL.
+ * @param ef The equals function to use to verify if value is in the list or not
  * @return Pointer to the Node containing the value, or NULL if not found
  * @warning Uses pointer comparison, not value comparison
+ * @note O(n) operation - may need to traverse entire list
  */
-Node *LinkedList_find_node(const LinkedList *list, const void *value) __nonnull((1, 2));
+Node *LinkedList_find_node(const LinkedList *list, const void *value, equals_fn ef) __nonnull((1, 2));
 
 /**
- * @brief Get the value of the last node
- * @param list The LinkedList to search. Must not be NULL.
- * @return Pointer to the last value, or NULL if list is empty
- * @note O(n) operation - traverses the entire list
- */
-void *LinkedList_find_last(const LinkedList *list) __nonnull((1));
-
-/**
- * @brief Check if the list contains a value (by pointer comparison)
+ * @brief Check if the list contains a value (by value comparison using passed in ef)
  * @param list The LinkedList to search. Must not be NULL.
  * @param value The value to search for. Must not be NULL.
+ * @param ef The equals function to use to verify if value is in the list or not
  * @return true if found, false otherwise
  * @warning Uses pointer comparison, not value comparison
+ * @note O(n) operation - may need to traverse entire list
  */
-bool LinkedList_contains(const LinkedList *list, const void *value) __nonnull((1, 2));
+bool LinkedList_contains(const LinkedList *list, const void *value, equals_fn ef) __nonnull((1, 2));
 
 /**
  * @brief Remove and return the last element
  * @param list The LinkedList to pop from. Must not be NULL.
  * @return true on success, false if list is empty or NULL
- * @note O(n) operation - traverses the entire list
+ * @note O(n) operation - must traverse to find second-to-last node
  * @note The popped value is freed using the list's destructor function
  */
 bool LinkedList_pop(LinkedList *list) __nonnull((1));
@@ -152,6 +154,7 @@ bool LinkedList_pop(LinkedList *list) __nonnull((1));
  * @param list The LinkedList to remove from. Must not be NULL.
  * @param node_to_remove The node to remove. Must not be NULL.
  * @return true on success, false on failure
+ * @note O(n) worst case - may need to traverse entire list to find predecessor
  * @note The removed value is freed using the list's destructor function
  * @note The node itself is also freed
  */
@@ -170,6 +173,7 @@ bool LinkedList_destroy(LinkedList *list, bool is_destroy_node_values) __nonnull
  * @param list The LinkedList to clear. Must not be NULL.
  * @param is_destroy_node_values If true, call destructor on all values
  * @return true on success, false on failure
+ * @note Resets both first and last pointers to NULL
  */
 bool LinkedList_clear(LinkedList *list, bool is_destroy_node_values) __nonnull((1));
 

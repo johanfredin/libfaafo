@@ -5,8 +5,6 @@
 
 #include "dbg.h"
 
-static Node *last_node(const LinkedList *list);
-
 LinkedList *LinkedList_create(const destructor_fn node_value_df) {
     LinkedList *list = calloc(1, sizeof(LinkedList));
     check_return(list != NULL, "Failed to allocate memory for List", NULL);
@@ -112,11 +110,11 @@ bool LinkedList_push_all(LinkedList *const list, void **data, const size_t n_ele
     return true;
 }
 
-Node *LinkedList_find_node(const LinkedList *const list, const void *const value) {
+Node *LinkedList_find_node(const LinkedList *const list, const void *const value, const equals_fn ef) {
     check_return(list, "List is null", NULL);
     check_return(value != NULL, "value is null", NULL);
     LINKEDLIST_FOREACH(list, node) {
-        if (node->value == value) {
+        if (ef(node->value, value)) {
             return node;
         }
     }
@@ -124,21 +122,13 @@ Node *LinkedList_find_node(const LinkedList *const list, const void *const value
     return NULL;
 }
 
-void *LinkedList_find_last(const LinkedList *const list) {
-    check_return(list, "List is null", NULL);
-    Node *last = last_node(list);
-    check_return(last, "No last entry found, weird", NULL);
-    return last->value;
-}
-
 bool LinkedList_pop(LinkedList *const list) {
     check_return(list, "List is null", false);
-    Node *last = last_node(list);
-    return LinkedList_remove(list, last);
+    return LinkedList_remove(list, list->last);
 }
 
-bool LinkedList_contains(const LinkedList *const list, const void *const value) {
-    return LinkedList_find_node(list, value);
+bool LinkedList_contains(const LinkedList *const list, const void *const value, const equals_fn ef) {
+    return LinkedList_find_node(list, value, ef);
 }
 
 bool LinkedList_remove(LinkedList *list, Node *node_to_remove) {
@@ -155,6 +145,22 @@ bool LinkedList_remove(LinkedList *list, Node *node_to_remove) {
 
     // Remove the node
     *current = node_to_remove->next;
+
+    // Handle update of list->last
+    if (node_to_remove == list->last) {
+        if (LinkedList_size(list) == 1) {
+            // List becomes empty, first node already NULL from before
+            list->last = NULL;
+        } else {
+           // Find new last node
+            Node *new_last = list->first;
+            while (new_last->next) {
+                new_last = new_last->next;
+            }
+            list->last = new_last;
+        }
+
+    }
 
     list->size--;
     list->node_value_df(removed); // Free the value using provided destroy function
@@ -181,15 +187,8 @@ bool LinkedList_clear(LinkedList *const list, const bool is_destroy_node_values)
         current = next;
     }
     list->first = NULL;
+    list->last = NULL;
     list->size = 0;
     return true;
 }
 
-static Node *last_node(const LinkedList *const list) {
-    LINKEDLIST_FOREACH(list, node) {
-        if (node->next == NULL) {
-            return node;
-        }
-    }
-    return NULL;
-}

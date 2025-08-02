@@ -67,7 +67,7 @@ static void from_arraylist(const bool is_destroy_src) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
     TEST_ASSERT_EQUAL_INT_MESSAGE(10, deref_int(LinkedList_first(list)), "Wrong first element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(20, deref_int(list->first->next->value), "Wrong middle element");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_find_last(list)), "Wrong last element");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_last(list)), "Wrong last element");
 
     if (!is_destroy_src) {
         // We need to handle these manually in the test if we told function to not remove them
@@ -84,7 +84,7 @@ void test_from_array_stack_allocated(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
     TEST_ASSERT_EQUAL_INT_MESSAGE(10, deref_int(LinkedList_first(list)), "Wrong first element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(20, deref_int(list->first->next->value), "Wrong middle element");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_find_last(list)), "Wrong last element");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_last(list)), "Wrong last element");
 }
 
 void test_from_array_heap_allocated(void) {
@@ -99,7 +99,7 @@ void test_from_array_heap_allocated(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
     TEST_ASSERT_EQUAL_INT_MESSAGE(10, deref_int(LinkedList_first(list)), "Wrong first element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(20, deref_int(list->first->next->value), "Wrong middle element");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_find_last(list)), "Wrong last element");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(30, deref_int(LinkedList_last(list)), "Wrong last element");
     free(data);
 }
 
@@ -118,14 +118,39 @@ void test_push_all_and_find_node(void) {
     const bool pushed = LinkedList_push_all(list, (void *[]){test1, test2, test3, test4}, 4);
     TEST_ASSERT_TRUE(pushed);
     TEST_ASSERT_EQUAL_INT_MESSAGE(4, list->size, "Wrong amount of elements in list");
-    const Node *res1 = LinkedList_find_node(list, test1);
-    const Node *res2 = LinkedList_find_node(list, test2);
-    const Node *res3 = LinkedList_find_node(list, test3);
-    const Node *res4 = LinkedList_find_node(list, test4);
+    const Node *res1 = LinkedList_find_node(list, test1, (equals_fn)biseq);
+    const Node *res2 = LinkedList_find_node(list, test2, (equals_fn)biseq);
+    const Node *res3 = LinkedList_find_node(list, test3, (equals_fn)biseq);
+    const Node *res4 = LinkedList_find_node(list, test4, (equals_fn)biseq);
     TEST_ASSERT_EQUAL_PTR_MESSAGE(test1, res1->value, "Wrong first element");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(test2, res2->value, "Wrong second element");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(test3, res3->value, "Wrong third element");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(test4, res4->value, "Wrong last element");
+}
+
+void test_find_and_contains_by_value(void) {
+    // Set up
+    list = LinkedList_create(free);
+
+    // Adding mixed values (dont do this live)
+    LinkedList_push(list, TestUtil_allocate_string("A string"));
+    LinkedList_push(list, TestUtil_allocate_int(10));
+    LinkedList_push(list, TestUtil_allocate_char('C'));
+
+    // Verify
+    const int i = 10;
+    const char c = 'C';
+
+    // Verify find
+    TEST_ASSERT_EQUAL_STRING(LinkedList_find_node(list, "A string", TestUtil_equals_fn_string)->value, "A string");
+    TEST_ASSERT_EQUAL_INT(deref_int(LinkedList_find_node(list, &i, TestUtil_equals_fn_int)->value), i);
+    TEST_ASSERT_EQUAL_CHAR(deref_char(LinkedList_find_node(list, &c, TestUtil_equals_fn_char)->value), 'C');
+
+    // Verify contains
+    TEST_ASSERT_TRUE(LinkedList_contains(list, "A string", TestUtil_equals_fn_string));
+    TEST_ASSERT_TRUE(LinkedList_contains(list, &i, TestUtil_equals_fn_int));
+    TEST_ASSERT_TRUE(LinkedList_contains(list, &c, TestUtil_equals_fn_char));
+
 }
 
 void test_push_pop(void) {
@@ -141,7 +166,7 @@ void test_push_pop(void) {
     LinkedList_push(list, test2);
     LinkedList_push(list, test3);
     TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_first(list), test1, "Wrong first value");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_find_last(list), test3, "Wrong last value");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_last(list), test3, "Wrong last value");
     TEST_ASSERT_EQUAL_INT_MESSAGE(LinkedList_size(list), 3, "Wrong amount of entries in list");
 
     // Test pop
@@ -161,11 +186,11 @@ void test_contains(void) {
     float *no_match = TestUtil_allocate_float(10.0f);
     float *match1 = TestUtil_allocate_float(20.0f);
     float *match2 = TestUtil_allocate_float(30.0f);
-    TEST_ASSERT_FALSE(LinkedList_contains(list, no_match));
+    TEST_ASSERT_FALSE(LinkedList_contains(list, no_match, TestUtil_equals_fn_float));
 
     LinkedList_push_all(list, (void *[]){match1, match2}, 2);
-    TEST_ASSERT_TRUE(LinkedList_contains(list, match1));
-    TEST_ASSERT_TRUE(LinkedList_contains(list, match2));
+    TEST_ASSERT_TRUE(LinkedList_contains(list, match1, TestUtil_equals_fn_float));
+    TEST_ASSERT_TRUE(LinkedList_contains(list, match2, TestUtil_equals_fn_float));
 
     free(no_match);
 }
@@ -187,7 +212,7 @@ void test_remove(void) {
     TEST_ASSERT_TRUE_MESSAGE(removed, "Wrong removed element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(LinkedList_size(list), 2, "Wrong amount");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_first(list), test1, "Wrong first element");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_find_last(list), test3, "Wrong last element");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_last(list), test3, "Wrong last element");
 }
 
 void test_clear(void) {
@@ -235,6 +260,7 @@ int main(void) {
     RUN_TEST(test_from_array_stack_allocated);
     RUN_TEST(test_from_array_heap_allocated);
     RUN_TEST(test_push_all_and_find_node);
+    RUN_TEST(test_find_and_contains_by_value);
     RUN_TEST(test_contains);
     RUN_TEST(test_clear);
     RUN_TEST(test_to_array_dont_destroy_src);

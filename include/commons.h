@@ -1,13 +1,15 @@
 //
 // Created by johan on 2025-07-21.
 //
-
 #ifndef COMMONS_H
 #define COMMONS_H
+
+#include <stdbool.h>
 
 #define NOOP Commons_noop
 
 typedef void (*destructor_fn)(void *);
+typedef bool (*equals_fn)(const void *a, const void *b);
 
 void Commons_bstring_destroy(void *b_string);
 
