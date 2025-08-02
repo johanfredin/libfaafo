@@ -3,6 +3,7 @@
 //
 #include <unity.h>
 #include <hashmap.h>
+
 #include "testutil.h"
 
 static HashMap *map;
@@ -14,12 +15,21 @@ static void test_destroy_function(void *ptr) {
     free(me);
 }
 
+static void test_destroy_function_int(void *ptr) {
+    MapEntry *me = ptr;
+    free(me->key);
+    free(me->value);
+    free(me);
+}
+
 void setUp(void) {
     map = NULL;
 }
 
 void tearDown(void) {
-    HashMap_destroy(map);
+    if (map) {
+        TEST_ASSERT_TRUE(HashMap_destroy(map));
+    }
 }
 
 void test_create(void) {
@@ -43,38 +53,44 @@ void test_create(void) {
 
 void test_put(void) {
     // Set up
-    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring, test_destroy_function);
-    bstring key = bfromcstr("key");
-    bstring value = bfromcstr("value");
+    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring,
+                         test_destroy_function);
+    bstring key1 = bfromcstr("key");
+    bstring value1 = bfromcstr("value");
     bstring key2 = bfromcstr("key2");
     bstring value2 = bfromcstr("value2");
 
-    // Act
-    bstring old_val = HashMap_put(map, key, value);
-    TEST_ASSERT_NULL(old_val);
+    // Test adding to empty map
+    bstring old_val = HashMap_put(map, key1, value1);
+    TEST_ASSERT_NULL_MESSAGE(old_val, "should be null since map is empty");
     TEST_ASSERT_EQUAL_INT(1, map->size);
 
     old_val = HashMap_put(map, key2, value2);
-    TEST_ASSERT_NULL_MESSAGE(old_val, "Should still be null");
+    TEST_ASSERT_NULL_MESSAGE(old_val, "Should still be null since nothing connected to key2");
     TEST_ASSERT_EQUAL_INT(2, map->size);
 
-    old_val = HashMap_put(map, key2, value);
-    TEST_ASSERT_EQUAL_PTR(value2, old_val);
+    // Test replace existing
+    bstring new_player = bfromcstr("new player");
+    old_val = HashMap_put(map, key2, new_player);
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(value2, old_val,
+                                  "new player should now be associated with key2 and old_value at key2 should have been returned");
     TEST_ASSERT_EQUAL_INT(2, map->size);
 
     bdestroy(old_val);
 }
 
-void test_get(void) {
+void test_get_no_resize_required(void) {
     // Set up
-    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring, test_destroy_function);
-    for (int i = 0; i < HASHMAP_DEFAULT_CAPACITY; i++) {
+    map = HashMap_create(HASHMAP_DEFAULT_CAPACITY, testutil_hash_fn_bstring, testutil_equals_fn_bstring,
+                         test_destroy_function);
+    const size_t size = 10;
+    for (int i = 0; i < size; i++) {
         bstring key = bformat("key %d", i + 1);
         bstring value = bformat("value %d", i + 1);
         HashMap_put(map, key, value);
     }
-    TEST_ASSERT_EQUAL_INT(HASHMAP_DEFAULT_CAPACITY, map->size);
-    for (int i = 0; i < HASHMAP_DEFAULT_CAPACITY; i++) {
+    TEST_ASSERT_EQUAL_INT(size, map->size);
+    for (int i = 0; i < size; i++) {
         bstring key = bformat("key %d", i + 1);
         bstring value = HashMap_get(map, key);
         bstring expected_value = bformat("value %d", i + 1);
@@ -83,13 +99,34 @@ void test_get(void) {
         bdestroy(key);
         bdestroy(expected_value);
     }
-    TEST_ASSERT_EQUAL_INT_MESSAGE(HASHMAP_DEFAULT_CAPACITY * 2, map->capacity, "Map capacity should have been doubled");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(HASHMAP_DEFAULT_CAPACITY, map->capacity, "Map capacity should be the same");
+}
+
+void test_get_resize_required(void) {
+    // Set up
+    const size_t new_cap = HASHMAP_DEFAULT_CAPACITY << 1;
+
+    map = HashMap_create(new_cap, testutil_hash_fn_int, testutil_equals_fn_int, test_destroy_function_int);
+    for (int i = 0; i < new_cap; i++) {
+        int *key = TestUtil_allocate_int(i + 1);
+        int *value = TestUtil_allocate_int(i + 10);
+        HashMap_put(map, key, value);
+    }
+    TEST_ASSERT_EQUAL_INT(new_cap, map->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(new_cap * 2, map->capacity, "Capacity should have doubled");
+    for (int i = 0; i < new_cap; i++) {
+        int key = i + 1;
+        int *value = HashMap_get(map, &key);
+        const int expected_value = i + 10;
+        TEST_ASSERT_EQUAL_INT(expected_value, value);
+    }
 }
 
 int main(void) {
     UNITY_BEGIN();
-    // RUN_TEST(test_create);
+    RUN_TEST(test_create);
     RUN_TEST(test_put);
-    // RUN_TEST(test_get);
+    RUN_TEST(test_get_no_resize_required);
+    RUN_TEST(test_get_resize_required);
     return UNITY_END();
 }

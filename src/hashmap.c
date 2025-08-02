@@ -12,17 +12,11 @@
     (map)->capacity=HASHMAP_DEFAULT_CAPACITY
 
 static size_t generate_hash(const HashMap *map, const void *key);
-
 static MapEntry *create_entry(void *key, void *value, size_t hash);
-
 static void add_new_entry(HashMap *map, size_t index, void *key, void *value, size_t hash);
-
 static void *handle_existing(HashMap *map, LinkedList *bucket, size_t hash, void *key, void *new_value);
-
 static bool expand(HashMap *map);
-
 static bool resize(HashMap *map, size_t new_capacity);
-
 static bool rehash_old_buckets(const HashMap *map, size_t old_cap);
 
 HashMap *HashMap_create(const size_t capacity, const hash_fn hash_fn, const equals_fn equals_fn,
@@ -102,11 +96,14 @@ bool HashMap_destroy(HashMap *map) {
 bool HashMap_clear(HashMap *map) {
     check_return(map, "Map is null", false);
     for (size_t i = 0; i < map->capacity; i++) {
-        check_return(
-            LinkedList_destroy(map->buckets[i]),
-            "There was an error destroying the buckets at position: %d. Memory leak may have occurred", i,
-            false
-        );
+        LinkedList *bucket = map->buckets[i];
+        if (bucket) {
+            /*
+             * Since we only initialize a bucket when needing to put data at that index, NULL buckets are likely
+             * to exist, and we don't want to break out if we hit one.
+             */
+            LinkedList_destroy(bucket);
+        }
     }
     reset_size_and_capacity(map);
     return true;
@@ -210,6 +207,7 @@ static bool rehash_old_buckets(const HashMap *const map, const size_t old_cap) {
         for (const Node *curr = old_bucket->first; curr != NULL; curr = curr->next) {
             MapEntry *entry = curr->value;
 
+            // Works because capacity is always powers of 2
             if (entry->hash & old_cap) {
                 if (!high_bucket) {
                     high_bucket = LinkedList_create(map->df);

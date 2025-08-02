@@ -6,6 +6,7 @@
 #define deref_char(ptr) deref_void_ptr(ptr, char)
 
 #define deref_int(ptr) (*(int*)(ptr))
+#define deref_size_t(ptr) (*(size_t*)(ptr))
 
 #define deref_string(ptr) ((char*)(ptr))
 

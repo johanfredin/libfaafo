@@ -28,6 +28,14 @@ static inline bool testutil_equals_fn_bstring(const void *a, const void *b) {
     return bstrcmp((bstring)a, (bstring)b) == 0;
 }
 
+static inline bool testutil_equals_fn_int(const void *a, const void *b) {
+    if (a == NULL || b == NULL) {
+        return a == b;  // Both NULL is equal, one NULL is not equal
+    }
+    return *(int*)a == *(int*)b;
+}
+
+size_t testutil_hash_fn_int(const void *key);
 size_t testutil_hash_fn_bstring(const void *key);
 int testutil_sort_bstring(void **a, void **b);
 int testutil_sort_int(void **a, void **b);

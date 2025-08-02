@@ -4,6 +4,7 @@
 #include "testutil.h"
 
 #include <bstrlib.h>
+#include <ptr_deref.h>
 
 int testutil_sort_bstring(void **a, void **b) {
     return bstrcmp(*a, *b);
@@ -22,4 +23,8 @@ size_t testutil_hash_fn_bstring(const void *key) {
         hash = 31 * hash + bchar(str, i);
     }
     return hash;
+}
+
+size_t testutil_hash_fn_int(const void *key) {
+    return key ? (size_t)(deref_int(key)) : 0;
 }
