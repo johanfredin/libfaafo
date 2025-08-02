@@ -102,7 +102,7 @@ bool HashMap_clear(HashMap *map) {
              * Since we only initialize a bucket when needing to put data at that index, NULL buckets are likely
              * to exist, and we don't want to break out if we hit one.
              */
-            LinkedList_destroy(bucket);
+            LinkedList_destroy(bucket, true);
         }
     }
     reset_size_and_capacity(map);
@@ -132,7 +132,7 @@ static void add_new_entry(HashMap *const map, const size_t index, void *const ke
 
     MapEntry *entry = create_entry(key, value, hash);
     if (!entry) {
-        LinkedList_destroy(bucket);
+        LinkedList_destroy(bucket, true);
         return;
     }
     LinkedList_push(bucket, entry);
@@ -225,7 +225,7 @@ static bool rehash_old_buckets(const HashMap *const map, const size_t old_cap) {
         map->buckets[old_index] = low_bucket;
         map->buckets[old_index + old_cap] = high_bucket;
 
-        LinkedList_destroy(old_bucket);
+        LinkedList_destroy(old_bucket, false);
     }
 
     return true;

@@ -23,7 +23,7 @@ void tearDown() {
      * function works as intended
     */
     if (list) {
-        TEST_ASSERT_TRUE(LinkedList_destroy(list));
+        TEST_ASSERT_TRUE(LinkedList_destroy(list, true));
     }
 }
 
@@ -33,15 +33,15 @@ void test_create(void) {
     LinkedList *defined = LinkedList_create(Commons_bstring_destroy);
 
     TEST_ASSERT_TRUE(noop_df_list->first == NULL && new->first == NULL && defined->first == NULL);
-    TEST_ASSERT_TRUE(noop_df_list->size = new->size = defined->size == 0);
+    TEST_ASSERT_TRUE(noop_df_list->size == new->size == defined->size == 0);
 
     TEST_ASSERT_EQUAL_PTR(NOOP, noop_df_list->node_value_df);
     TEST_ASSERT_EQUAL_PTR(free, new->node_value_df);
     TEST_ASSERT_EQUAL_PTR(Commons_bstring_destroy, defined->node_value_df);
 
-    LinkedList_destroy(noop_df_list);
-    LinkedList_destroy(new);
-    LinkedList_destroy(defined);
+    LinkedList_destroy(noop_df_list, true);
+    LinkedList_destroy(new, true);
+    LinkedList_destroy(defined, true);
 }
 
 void test_from_ArrayList_no_df(void) {
@@ -145,12 +145,12 @@ void test_push_pop(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(LinkedList_size(list), 3, "Wrong amount of entries in list");
 
     // Test pop
-    const char *pop1 = LinkedList_pop(list);
-    const char *pop2 = LinkedList_pop(list);
-    const char *pop3 = LinkedList_pop(list);
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(pop1, test3, "Wrong value popped first");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(pop2, test2, "Wrong value popped second");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(pop3, test1, "Wrong value popped third");
+    const bool pop1 = LinkedList_pop(list);
+    const bool pop2 = LinkedList_pop(list);
+    const bool pop3 = LinkedList_pop(list);
+    TEST_ASSERT_TRUE_MESSAGE(pop1, "Wrong value popped first");
+    TEST_ASSERT_TRUE_MESSAGE(pop2, "Wrong value popped second");
+    TEST_ASSERT_TRUE_MESSAGE(pop3, "Wrong value popped third");
     TEST_ASSERT_TRUE_MESSAGE(LinkedList_is_empty(list), "List is not empty");
 }
 
@@ -181,10 +181,10 @@ void test_remove(void) {
     LinkedList_push(list, test3);
 
     // Act
-    char *val = LinkedList_remove(list, list->first->next);
+    bool removed = LinkedList_remove(list, list->first->next);
 
     // Verify
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(val, test2, "Wrong removed element");
+    TEST_ASSERT_TRUE_MESSAGE(removed, "Wrong removed element");
     TEST_ASSERT_EQUAL_INT_MESSAGE(LinkedList_size(list), 2, "Wrong amount");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_first(list), test1, "Wrong first element");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(LinkedList_find_last(list), test3, "Wrong last element");
@@ -196,12 +196,33 @@ void test_clear(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(3, list->size, "Wrong amount of elements in list");
 
     // Act
-    const bool cleared = LinkedList_clear(list);
+    const bool cleared = LinkedList_clear(list, true);
 
     // Verify
     TEST_ASSERT_TRUE_MESSAGE(cleared, "Clearing failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, list->size, "List is not empty");
     TEST_ASSERT_NULL_MESSAGE(list->first, "First element is null");
+}
+
+void test_to_array_dont_destroy_src(void) {
+    // Set up
+    list = LinkedList_from_array((int[]){1, 2, 3}, 3, sizeof(int), free);
+
+    // Act
+    int *array = LinkedList_to_array(list, sizeof(int), false);
+
+    // Verify list not destroyed
+    int expected = 0;
+    LINKEDLIST_FOREACH(list, node) {
+        TEST_ASSERT_EQUAL_INT_MESSAGE(++expected, deref_int(node->value), "Should be able to access the data");
+    }
+
+    // Verify array
+    for (int i = 0; i < 3; i++) {
+        TEST_ASSERT_EQUAL_INT_MESSAGE(i + 1, array[i], "Should be able to access the data");
+    }
+
+    free(array);
 }
 
 int main(void) {
@@ -216,5 +237,6 @@ int main(void) {
     RUN_TEST(test_push_all_and_find_node);
     RUN_TEST(test_contains);
     RUN_TEST(test_clear);
+    RUN_TEST(test_to_array_dont_destroy_src);
     return UNITY_END();
 }

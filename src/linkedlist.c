@@ -58,8 +58,28 @@ LinkedList *LinkedList_from_array(void *const array, const size_t n_elements, co
     }
     return list;
 catch:
-    LinkedList_destroy(list);
+    LinkedList_destroy(list, true);
     return NULL;
+}
+
+void *LinkedList_to_array(LinkedList *const list, const size_t element_size, const bool destroy_src) {
+    check_return(list, "List is null", NULL);
+    check_return(element_size > 0, "Element size must be > 0", NULL);
+    check_return(!LinkedList_is_empty(list), "List is empty", NULL);
+
+    char *array = calloc(LinkedList_size(list), element_size);
+    check_return(array, "Failed to allocate memory for array", NULL);
+    size_t offset = 0;
+    LINKEDLIST_FOREACH(list, node) {
+        memcpy(array + offset, node->value, element_size);
+        offset += element_size;
+    }
+
+    if (destroy_src) {
+        LinkedList_destroy(list, true);
+    }
+
+    return array;
 }
 
 bool LinkedList_push(LinkedList *const list, void *value) {
@@ -68,22 +88,17 @@ bool LinkedList_push(LinkedList *const list, void *value) {
     Node *new_node = calloc(1, sizeof(Node));
     check_mem_return(new_node, false);
 
-    switch (LinkedList_size(list)) {
-        case 0:
-            list->first = new_node;
-            break;
-        case 1:
-            list->first->next = new_node;
-            break;
-        default: {
-            Node *last = last_node(list);
-            check_return(last, "No last entry found, weird", false);
-            last->next = new_node;
-        }
+    new_node->value = value;
+
+    if (LinkedList_is_empty(list)) {
+        list->first = new_node;
+        list->last = new_node;
+    } else {
+        list->last->next = new_node;
+        list->last = new_node;
     }
 
     list->size++;
-    new_node->value = value;
     return true;
 }
 
@@ -91,7 +106,7 @@ bool LinkedList_push_all(LinkedList *const list, void **data, const size_t n_ele
     check_return(list, "List is null", false);
     check_return(data != NULL, "values is null", false);
     check_return(n_elements > 0, "values_count must be > 0", false);
-    for (int i = 0; i < n_elements; i++) {
+    for (size_t i = 0; i < n_elements; i++) {
         check(LinkedList_push(list, data[i]), "Failed to push value", false);
     }
     return true;
@@ -116,8 +131,8 @@ void *LinkedList_find_last(const LinkedList *const list) {
     return last->value;
 }
 
-void *LinkedList_pop(LinkedList *const list) {
-    check_return(list, "List is null", NULL);
+bool LinkedList_pop(LinkedList *const list) {
+    check_return(list, "List is null", false);
     Node *last = last_node(list);
     return LinkedList_remove(list, last);
 }
@@ -126,9 +141,9 @@ bool LinkedList_contains(const LinkedList *const list, const void *const value) 
     return LinkedList_find_node(list, value);
 }
 
-void *LinkedList_remove(LinkedList *list, Node *node_to_remove) {
-    check_return(list, "List is null", NULL);
-    check_return(node_to_remove, "Node can't be NULL", NULL);
+bool LinkedList_remove(LinkedList *list, Node *node_to_remove) {
+    check_return(list, "List is null", false);
+    check_return(node_to_remove, "Node can't be NULL", false);
 
     void *removed = node_to_remove->value;
 
@@ -144,22 +159,24 @@ void *LinkedList_remove(LinkedList *list, Node *node_to_remove) {
     list->size--;
     list->node_value_df(removed); // Free the value using provided destroy function
     free(node_to_remove); // Free the node itself
-    return removed;
+    return true;
 }
 
-bool LinkedList_destroy(LinkedList *const list) {
+bool LinkedList_destroy(LinkedList *const list, const bool is_destroy_node_values) {
     check_return(list, "List is null", false);
-    LinkedList_clear(list);
+    LinkedList_clear(list, is_destroy_node_values);
     free(list);
     return true;
 }
 
-bool LinkedList_clear(LinkedList *const list) {
+bool LinkedList_clear(LinkedList *const list, const bool is_destroy_node_values) {
     check_return(list, "List is null", false);
     Node *current = list->first;
     while (current) {
         Node *next = current->next;
-        list->node_value_df(current->value);
+        if (is_destroy_node_values) {
+            list->node_value_df(current->value);
+        }
         free(current);
         current = next;
     }

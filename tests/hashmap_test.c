@@ -3,6 +3,7 @@
 //
 #include <unity.h>
 #include <hashmap.h>
+#include <ptr_deref.h>
 
 #include "testutil.h"
 
@@ -118,7 +119,7 @@ void test_get_resize_required(void) {
         int key = i + 1;
         int *value = HashMap_get(map, &key);
         const int expected_value = i + 10;
-        TEST_ASSERT_EQUAL_INT(expected_value, value);
+        TEST_ASSERT_EQUAL_INT(expected_value, deref_int(value));
     }
 }
 
