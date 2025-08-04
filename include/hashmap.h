@@ -12,6 +12,8 @@
 #define HASHMAP_DEFAULT_CAPACITY 16
 #define HASHMAP_LOAD_FACTOR 0.75f
 
+#define HashMap_is_empty(map) ((map) ? (map)->size == 0 : 0)
+
 typedef size_t (*hash_fn)(const void *key);
 
 typedef struct MapEntry {
@@ -24,6 +26,7 @@ typedef struct HashMap {
     LinkedList **buckets;
     size_t capacity;
     size_t size;
+    size_t threshold;
     hash_fn hash_fn;
     equals_fn equals_fn;
     destructor_fn df;
@@ -32,11 +35,11 @@ typedef struct HashMap {
 HashMap *HashMap_create(size_t capacity, hash_fn hash_fn, equals_fn equals_fn, destructor_fn df);
 void *HashMap_put(HashMap *map, void *key, void *value) __nonnull((1, 2, 3));
 void *HashMap_get(const HashMap *map, void *key) __nonnull((1, 2));
-// void *HashMap_remove(const HashMap *map, void *key);
+bool HashMap_remove(HashMap *map, void *key) __nonnull((1, 2));
 bool HashMap_destroy(HashMap *map) __nonnull((1));
 bool HashMap_clear(HashMap *map) __nonnull((1));
 // bool HashMap_contains_key(const HashMap *map, void *key);
-// bool HashMap_is_empty(const HashMap *map);
+// HashSet *HashMap_keyset(const HashMap *map);
 
 
 #endif //libfaafo_HASHMAP_H

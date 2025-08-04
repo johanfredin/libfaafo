@@ -23,6 +23,15 @@ static void test_destroy_function_int(void *ptr) {
     free(me);
 }
 
+static HashMap *new_bstring_hashmap() {
+    return HashMap_create(
+        HASHMAP_DEFAULT_CAPACITY,
+        TestUtil_hash_fn_bstring,
+        (equals_fn)biseq,
+        test_destroy_function
+    );
+}
+
 void setUp(void) {
     map = NULL;
 }
@@ -123,11 +132,29 @@ void test_get_resize_required(void) {
     }
 }
 
+void test_remove(void) {
+    // Set up
+    map = new_bstring_hashmap();
+    bstring key = bfromcstr("key");
+    bstring value = bfromcstr("value");
+    bstring non_existing_key = bfromcstr("no good key");
+    TEST_ASSERT_FALSE(HashMap_remove(map, non_existing_key));
+
+    HashMap_put(map, key, value);
+    TEST_ASSERT_FALSE_MESSAGE(HashMap_remove(map, non_existing_key), "Key should not in map");
+
+    bool removed = HashMap_remove(map, key);
+    TEST_ASSERT_TRUE_MESSAGE(removed, "Key should not be removed");
+
+    bdestroy(non_existing_key);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_create);
     RUN_TEST(test_put);
     RUN_TEST(test_get_no_resize_required);
     RUN_TEST(test_get_resize_required);
+    RUN_TEST(test_remove);
     return UNITY_END();
 }

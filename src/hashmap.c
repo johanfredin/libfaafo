@@ -7,9 +7,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define reset_size_and_capacity(map)                \
-    (map)->size = 0;                                \
-    (map)->capacity=HASHMAP_DEFAULT_CAPACITY
+#define set_threshold(map) ((map)->threshold = (size_t)((map)->capacity * HASHMAP_LOAD_FACTOR))
+
+typedef struct ListNodePair {
+    LinkedList *list;
+    Node *node;
+} ListNodePair;
 
 static size_t generate_hash(const HashMap *map, const void *key);
 static MapEntry *create_entry(void *key, void *value, size_t hash);
@@ -18,11 +21,12 @@ static void *handle_existing(HashMap *map, LinkedList *bucket, size_t hash, void
 static bool expand(HashMap *map);
 static bool resize(HashMap *map, size_t new_capacity);
 static bool rehash_old_buckets(const HashMap *map, size_t old_cap);
+static void find_node(const HashMap *map, const void *key, size_t hash, ListNodePair *out_pair);
 
 HashMap *HashMap_create(const size_t capacity, const hash_fn hash_fn, const equals_fn equals_fn,
                         const destructor_fn df) {
     check_return(capacity > 0, "Capacity must be > 0", NULL);
-    check_return((capacity % 2 == 0), "Capacity must be a power of 2", NULL);
+    check_return((capacity & (capacity - 1)) == 0, "Capacity must be a power of 2", NULL);
 
     HashMap *map = calloc(1, sizeof(HashMap));
     check_mem_return(map, NULL);
@@ -36,6 +40,7 @@ HashMap *HashMap_create(const size_t capacity, const hash_fn hash_fn, const equa
     map->hash_fn = hash_fn;
     map->equals_fn = equals_fn;
     map->df = df ? df : free;
+    set_threshold(map);
     return map;
 catch:
     HashMap_destroy(map);
@@ -47,7 +52,7 @@ void *HashMap_put(HashMap *const map, void *key, void *const value) {
     check_return(key, "Key is null", NULL);
     check_return(value, "Value is null", NULL);
 
-    const bool is_time_to_expand = ((float) map->size / (float) map->capacity) >= HASHMAP_LOAD_FACTOR;
+    const bool is_time_to_expand = map->size >= map->threshold;
     if (is_time_to_expand) {
         const bool is_expanded = expand(map);
         check_return(is_expanded, "Failed to expand map", NULL);
@@ -66,22 +71,12 @@ void *HashMap_get(const HashMap *map, void *key) {
     check_return(map, "Map is null", NULL);
     check_return(key, "Key is null", NULL);
 
-    const size_t hash = generate_hash(map, key);
-    const size_t index = hash & (map->capacity - 1); // Java style but will break if cap not powers of 2
-    LinkedList *bucket = map->buckets[index];
-    check_return(bucket, "No entry found", NULL);
-    if (LinkedList_size(bucket) == 1) {
-        const MapEntry *entry = bucket->first->value;
-        return entry->value; // If only one entry in bucket we don't need to do equals checks.
-    }
-
-    for (const Node *curr = bucket->first; curr != NULL; curr = curr->next) {
-        const MapEntry *entry = curr->value;
-        if (entry->hash == hash && map->equals_fn(entry->key, key)) {
-            return entry->value;
-        }
-    }
-    return NULL;
+    ListNodePair pair = {0};
+    find_node(map, key, generate_hash(map, key), &pair);
+    Node *node = pair.node;
+    check_return(node, "No entry found", NULL);
+    const MapEntry *entry = (MapEntry*) node->value;
+    return entry->value;
 }
 
 bool HashMap_destroy(HashMap *map) {
@@ -105,11 +100,27 @@ bool HashMap_clear(HashMap *map) {
             LinkedList_destroy(bucket, true);
         }
     }
-    reset_size_and_capacity(map);
+    // Reset size, keep capacity
+    map->size = 0;
     return true;
 }
 
-static size_t generate_hash(const HashMap *map, const void *key) {
+bool HashMap_remove(HashMap *const map, void *key) {
+    check_return(map, "Map is null", false);
+    check_return(key, "Key is null", false);
+
+    ListNodePair pair = {0};
+    find_node(map, key, generate_hash(map, key), &pair);
+    check_return(pair.node && pair.list, "Node or list not found for key", false);
+    LinkedList_remove(pair.list, pair.node);
+    map->size--;
+    return true;
+}
+
+
+// Private helper functions
+
+static inline size_t generate_hash(const HashMap *map, const void *key) {
     size_t hash = map->hash_fn(key);
     hash ^= (hash >> 16);
     return hash;
@@ -188,7 +199,16 @@ static bool resize(HashMap *const map, const size_t new_capacity) {
 
     rehash_old_buckets(map, old_cap);
     map->capacity = new_capacity;
+    set_threshold(map);
     return true; // Failed to rehash old buckets, so reset to old capacity and return false
+}
+
+static inline void push_to_bucket(LinkedList **bucket, MapEntry *entry, const destructor_fn df) {
+    if (!*bucket) {
+        *bucket = LinkedList_create(df);
+        check(*bucket, "Failed to create bucket", return);
+    }
+    LinkedList_push(*bucket, entry);
 }
 
 static bool rehash_old_buckets(const HashMap *const map, const size_t old_cap) {
@@ -205,19 +225,13 @@ static bool rehash_old_buckets(const HashMap *const map, const size_t old_cap) {
         LinkedList *high_bucket = NULL;
 
         for (const Node *curr = old_bucket->first; curr != NULL; curr = curr->next) {
-            MapEntry *entry = curr->value;
+            MapEntry *entry = (MapEntry *) curr->value;
 
             // Works because capacity is always powers of 2
             if (entry->hash & old_cap) {
-                if (!high_bucket) {
-                    high_bucket = LinkedList_create(map->df);
-                }
-                LinkedList_push(high_bucket, entry);
+                push_to_bucket(&high_bucket, entry, map->df);
             } else {
-                if (!low_bucket) {
-                    low_bucket = LinkedList_create(map->df);
-                }
-                LinkedList_push(low_bucket, entry);
+                push_to_bucket(&low_bucket, entry, map->df);
             }
         }
 
@@ -225,8 +239,24 @@ static bool rehash_old_buckets(const HashMap *const map, const size_t old_cap) {
         map->buckets[old_index] = low_bucket;
         map->buckets[old_index + old_cap] = high_bucket;
 
+        // Destroy the old list but not its node_values that are now assigned to the new buckets
         LinkedList_destroy(old_bucket, false);
     }
 
     return true;
+}
+
+static void find_node(const HashMap *const map, const void *const key, const size_t hash, ListNodePair *out_pair) {
+    const size_t index = hash & (map->capacity - 1); // Java style but will break if cap not powers of 2
+    LinkedList *bucket = map->buckets[index];
+    check(bucket, "No entry found", return);
+
+    for (Node *curr = bucket->first; curr != NULL; curr = curr->next) {
+        const MapEntry *entry = curr->value;
+        if (entry->hash == hash && map->equals_fn(entry->key, key)) {
+            out_pair->list = bucket;
+            out_pair->node = curr;
+            return;
+        }
+    }
 }
