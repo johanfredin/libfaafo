@@ -8,6 +8,31 @@
 
 #define NOOP Commons_noop
 
+
+#if defined(__GNUC__) || defined(__clang__)
+// GCC or Clang specific code
+#define Commons_will_overflow(operand, multiplier, result) \
+__builtin_mul_overflow((operand), multiplier, (result))
+#else
+// Generic implementation
+static inline bool Commons_will_overflow(size_t a, size_t b, size_t *result) {
+	if (a == 0 || b == 0) {
+		*result = 0;
+		return false;
+	}
+
+	size_t product = a * b;
+	if (product / a != b) {
+		return true; // Overflow occurred
+	}
+
+	*result = product;
+	return false;
+}
+
+#endif
+
+
 typedef void (*destructor_fn)(void *);
 typedef bool (*equals_fn)(const void *a, const void *b);
 

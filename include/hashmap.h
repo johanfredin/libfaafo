@@ -5,7 +5,6 @@
 #ifndef libfaafo_HASHMAP_H
 #define libfaafo_HASHMAP_H
 #include <commons.h>
-#include <stddef.h>
 #include <stdbool.h>
 #include "linkedlist.h"
 

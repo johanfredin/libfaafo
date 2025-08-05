@@ -4,7 +4,7 @@ set(CMAKE_C_COMPILER clang)
 
 project(libfaafo C)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
 
 # Include FetchContent for downloading Unity
 include(FetchContent)

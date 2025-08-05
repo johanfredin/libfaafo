@@ -10,17 +10,17 @@
 
 
 inline void Commons_noop(void *ptr) {
-    // Does nothing
-    (void)ptr;
+	// Does nothing
+	(void) ptr;
 }
 
 void Commons_bstring_destroy(void *b_string) {
-    assert(bdestroy(b_string) == BSTR_OK);
+	assert(bdestroy(b_string) == BSTR_OK);
 }
 
 void Commons_map_entry_destroy(void *map_entry) {
-    MapEntry *entry = map_entry;
-    free(entry->key);
-    free(entry->value);
-    free(entry);
+	MapEntry *entry = map_entry;
+	free(entry->key);
+	free(entry->value);
+	free(entry);
 }
