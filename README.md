@@ -31,6 +31,8 @@ This is an **educational project** and **work in progress (WIP)**. I'm building 
 ## Current Status
 
 ⚠️ **Work in Progress** - This library is actively being developed as I learn. Do whatever you want with it but don't expect magic.
+⚠️ This project targets C99 and above. Some code and preprocessor directives only work with GCC and Clang. Sorry/Not sorry MSVC users.
+
 
 ## Data Structures Implemented
 
