@@ -31,7 +31,15 @@ typedef struct HashMap {
     destructor_fn df;
 } HashMap;
 
-HashMap *HashMap_create(size_t capacity, hash_fn hash_fn, equals_fn equals_fn, destructor_fn df);
+/**
+ * Allocate a new hashmap
+ * @param capacity the initial capacity. Must be > 0 AND powers of 2. Recommended: HASHMAP_DEFAULT_CAPACITY
+ * @param hash_fn the hashing function to apply for the MapEntry value types. Cannot be NULL
+ * @param equals_fn the equals function to use when comparing MapEntry values to find a match. Must not be nulkl
+ * @param map_entry_df the destroy function to apply to the MapEntries in the map. Defaults to using free on MapEntry key,value and the entry itself
+ * @return A new hashmap on the heap of NULL if errors.
+ */
+HashMap *HashMap_create(size_t capacity, hash_fn hash_fn, equals_fn equals_fn, destructor_fn map_entry_df) __nonnull((2, 3));
 void *HashMap_put(HashMap *map, void *key, void *value) __nonnull((1, 2, 3));
 void *HashMap_get(const HashMap *map, void *key) __nonnull((1, 2));
 bool HashMap_remove(HashMap *map, void *key) __nonnull((1, 2));

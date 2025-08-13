@@ -124,6 +124,7 @@ Node *LinkedList_find_node(const LinkedList *const list, const void *const value
 
 bool LinkedList_pop(LinkedList *const list) {
     check_return(list, "List is null", false);
+
     return LinkedList_remove(list, list->last);
 }
 

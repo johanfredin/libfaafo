@@ -144,7 +144,7 @@ void test_remove(void) {
     TEST_ASSERT_FALSE_MESSAGE(HashMap_remove(map, non_existing_key), "Key should not in map");
 
     bool removed = HashMap_remove(map, key);
-    TEST_ASSERT_TRUE_MESSAGE(removed, "Key should not be removed");
+    TEST_ASSERT_TRUE_MESSAGE(removed, "Value associated with key should now be removed");
 
     bdestroy(non_existing_key);
 }

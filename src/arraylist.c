@@ -62,14 +62,32 @@ bool ArrayList_contains(const ArrayList *const list, const void *const value) {
 }
 
 bool ArrayList_contains_all(const ArrayList *const list, void **data, const unsigned int data_count) {
-    check_return(list != NULL, "list is null", false);
-    for (int i = 0; i < data_count; i++) {
-        if (!ArrayList_contains(list, data[i])) {
-            return false;
-        }
-    }
-    return true;
+	check_return(list != NULL, "list is null", false);
+	check_return(data != NULL, "data is null", false);
+	check_return(data_count > 0, "data_count must be > 0", false);
+
+	// For each item we're looking for...
+	for (unsigned int i = 0; i < data_count; i++) {
+		bool found = false;
+
+		// ...search through the entire list
+		for (unsigned int j = 0; j < list->size; j++) {
+			if (list->data[j] == data[i]) {
+				found = true;
+				break;  // Found it! Move to next item
+			}
+		}
+
+		// If ANY item wasn't found, return false immediately
+		if (!found) {
+			return false;
+		}
+	}
+
+	// All items were found!
+	return true;
 }
+
 
 int ArrayList_index_of(const ArrayList *const list, const void *const value) {
     check_return(list != NULL, "list is null", -1);

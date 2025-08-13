@@ -17,7 +17,7 @@ While starting with Zed's foundation, this library has grown beyond the original
 - **Extended functionality**: Adding features and optimizations as I learn more
 
 #### Why based on Java?
-Besides Java being everyones favorite language, it is the language Im most familiar with, and it gave me an opportunity to 
+Besides Java being everyones favorite language(right?), it is the language Im most familiar with, and it gave me an opportunity to 
 learn how the collections work under the hood. Is it optimal for C? Most likely not but it was easier for me to use the same terminology
 
 ## Purpose
@@ -31,6 +31,7 @@ This is an **educational project** and **work in progress (WIP)**. I'm building 
 ## Current Status
 
 ⚠️ **Work in Progress** - This library is actively being developed as I learn. Do whatever you want with it but don't expect magic.
+
 ⚠️ This project targets C99 and above. Some code and preprocessor directives only work with GCC and Clang. Sorry/Not sorry MSVC users.
 
 
